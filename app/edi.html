@@ -1,0 +1,37 @@
+<html>
+	<head>
+		<title>EDI</title>
+		<link rel="stylesheet" href="s/c/codemirror.css">
+		<link rel="stylesheet" href="s/c/theme/solarized.css">
+		<link href="s/c/jqx.base.css" rel="stylesheet">
+		<link href="s/c/editor.css" rel="stylesheet">
+
+		<script data-main="s/j/edi" src="s/j/require.js"></script>
+	</head>
+
+	<body>
+		<div id="status">scratch</div>
+		<div id="container">
+			<div class="cols" id="editor_col">
+				<div id="editor"></div>
+			</div>
+		</div>
+		
+		<script type="text/template" id="command-tmpl">
+			<div id="output"></div>
+		</script>
+		<script type="text/template" id="output-tmpl">
+			<p class="command">
+				<span class="prompt <% if(active){ %> active <% } %>">&#187;</span>
+				<span class="command"><%= command %></span>
+				<span class="cancel">&#215;</span>
+			</p>
+			<div class="out"></div>
+		</script>
+		<script type="text/template" id="prompt-tmpl">
+			<span class="prompt">&#187;</span>
+			<input class="bar" type="text"/>
+		</script>
+	</body>
+</html>
+
