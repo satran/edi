@@ -1,5 +1,0 @@
-Vesion 0.1 (05-07-2014)
------------------------
-The very first public release. Features are limited to let you just work with the editor.
-- Execute commands
-- Open and save files
