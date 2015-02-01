@@ -1,0 +1,28 @@
+<!doctype=html>
+<html>
+<head>
+	<link href="/s/style.css" rel="stylesheet" />
+	<title>edi</title>
+</head>
+<body>
+	<!-- TEMPLATES -->
+	<script id="window-tmpl" type="text/template">
+		<tr class="window-header">
+			<td class="drag" id="drag-<%= id %>">&#449;</td>
+			<td><input class="status" id="status-<%= id %>" value="<%= name %>"/></td>
+			</tr>
+		<tr><td colspan="2">
+			<textarea class="editor" id="editor-<%= id %>"></textarea>
+		</td></tr>
+	</script>
+	<script id="console-tmpl" type="text/template">
+		<input class="command" />
+	</script>
+
+	<!-- END OF TEMPLATES-->
+
+	<script src="/s/jquery.js"></script>
+	<script src="/s/underscore.js"></script>
+	<script src="/s/backbone.js"></script>
+	<script src="/s/app.js"></script>
+</body>
