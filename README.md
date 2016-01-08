@@ -1,3 +1,5 @@
+**This project is abandoned as I currently do not have time to work on it. Please feel free to fork it.**
+
 #EDI
 
 EDI is an IDE. Rather than an Integrated Development Environment it strives to be an Integrating Development Environment in the spirit of Acme. EDI does not try to do it all. It rather leans on the wonderful tools that already exist on your machine. It acts as a bridge between those commands and the editor.
