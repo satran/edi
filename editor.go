@@ -4,16 +4,15 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"time"
 
 	termbox "github.com/nsf/termbox-go"
-	"github.com/satran/edi/buffer"
+	"github.com/satran/edi/file"
 )
 
 func newEditor(t Terminal, names ...string) (*editor, error) {
-	buffers := make([]buffer.Buffer, 0, len(names))
+	buffers := make([]file.Buffer, 0, len(names))
 	for _, name := range names {
-		b, err := buffer.New(name)
+		b, err := file.New(name)
 		if err != nil {
 			return nil, fmt.Errorf("opening %s: %s", name, err)
 		}
@@ -25,19 +24,33 @@ func newEditor(t Terminal, names ...string) (*editor, error) {
 
 type editor struct {
 	terminal Terminal
-	current  buffer.Buffer
-	buffers  []buffer.Buffer
+	current  file.Buffer
+	buffers  []file.Buffer
+}
+
+func (e *editor) Close() {
+	for _, b := range e.buffers {
+		b.Close()
+	}
 }
 
 // ListenAndServe renders the UI and starts the FUSE filesystem
 func (e *editor) ListenAndServe() error {
-	if err := setStatus(e.terminal, e.current.Name()); err != nil {
+	if err := renderBuffer(e.terminal, e.current); err != nil {
 		return err
 	}
-	if err := setContent(e.terminal, e.current); err != nil {
+	events := make(chan Event)
+	go e.listenForKeypress(e.terminal, events)
+	return e.handleKeypress(e.terminal, events)
+}
+
+func renderBuffer(t Terminal, b file.Buffer) error {
+	if err := setStatus(t, b.Name()); err != nil {
 		return err
 	}
-	time.Sleep(5 * time.Second)
+	if err := setContent(t, b); err != nil {
+		return err
+	}
 	return nil
 }
 
