@@ -43,6 +43,7 @@ func main() {
 	defer e.Close()
 
 	if err := e.ListenAndServe(); err != nil {
+		termbox.Close()
 		log.Fatal(err)
 	}
 }
