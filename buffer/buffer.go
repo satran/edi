@@ -3,6 +3,7 @@ package buffer
 import (
 	"errors"
 	"io"
+	"os"
 )
 
 type Buffer interface {
@@ -15,26 +16,31 @@ type Buffer interface {
 
 type defaultBuffer struct {
 	name string
+	file *os.File
 }
 
 func New(name string) (Buffer, error) {
-	return &defaultBuffer{name: name}, nil
+	f, err := os.OpenFile(name, os.O_CREATE|os.O_RDWR, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+	return &defaultBuffer{name: name, file: f}, nil
 }
 
 func (b *defaultBuffer) Read(p []byte) (int, error) {
-	return 0, errors.New("not implemented")
+	return b.file.Read(p)
 }
 
 func (b *defaultBuffer) Write(p []byte) (int, error) {
-	return 0, errors.New("not implemented")
+	return b.file.Write(p)
 }
 
 func (b *defaultBuffer) Seek(offset int64, whence int) (int64, error) {
-	return 0, errors.New("not implemented")
+	return b.file.Seek(offset, whence)
 }
 
 func (b *defaultBuffer) Close() error {
-	return errors.New("not implemented")
+	return b.file.Close()
 }
 
 func (b *defaultBuffer) Line(n int64) ([]byte, error) {

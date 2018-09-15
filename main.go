@@ -40,6 +40,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer e.Close()
+
 	if err := e.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
