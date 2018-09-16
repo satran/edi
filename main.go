@@ -17,6 +17,7 @@ package main
 import (
 	"flag"
 	"log"
+	"os"
 
 	termbox "github.com/nsf/termbox-go"
 )
@@ -25,6 +26,12 @@ func main() {
 	debug := flag.Bool("debug", false, "print debug statements")
 	flag.Parse()
 	if *debug {
+		f, err := os.OpenFile("debug.log", os.O_CREATE|os.O_APPEND, os.ModePerm)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+		log.SetOutput(f)
 		log.SetFlags(log.Lshortfile)
 	} else {
 		log.SetFlags(0)

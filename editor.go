@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log"
 
 	termbox "github.com/nsf/termbox-go"
 	"github.com/satran/edi/file"
@@ -13,14 +12,14 @@ import (
 func newEditor(t Terminal, names ...string) (*editor, error) {
 	e := &editor{
 		terminal: &terminal{},
-		buffers:  make(map[string]*bufferState),
+		buffers:  make(map[string]*bufferView),
 	}
 	for i, name := range names {
 		b, err := file.New(name)
 		if err != nil {
 			return nil, fmt.Errorf("opening %s: %s", name, err)
 		}
-		bs := newBufferState(b)
+		bs := newBufferView(b)
 		e.buffers[name] = bs
 		if i == 0 {
 			e.current = bs
@@ -32,22 +31,8 @@ func newEditor(t Terminal, names ...string) (*editor, error) {
 
 type editor struct {
 	terminal Terminal
-	current  *bufferState
-	buffers  map[string]*bufferState
-}
-
-type bufferState struct {
-	file.Buffer
-	line    int
-	column  int
-	cursorx int
-	cursory int
-}
-
-func newBufferState(b file.Buffer) *bufferState {
-	return &bufferState{
-		Buffer: b,
-	}
+	current  *bufferView
+	buffers  map[string]*bufferView
 }
 
 func (e *editor) Close() {
@@ -64,11 +49,11 @@ func (e *editor) ListenAndServe() error {
 	return e.handleKeypress()
 }
 
-func renderBuffer(t Terminal, b *bufferState) error {
+func renderBuffer(t Terminal, b *bufferView) error {
 	if err := t.Clear(termbox.ColorDefault, termbox.ColorDefault); err != nil {
 		return err
 	}
-	if err := seekToLine(b, b.line); err != nil {
+	if _, err := b.seekLine(b.line); err != nil {
 		return err
 	}
 	if err := setStatus(t, fmt.Sprintf("%s %d:%d", b.Name(), b.line, b.column)); err != nil {
@@ -78,34 +63,6 @@ func renderBuffer(t Terminal, b *bufferState) error {
 		return err
 	}
 	return nil
-}
-
-// this is going to be very slow when I have large files. For now I'm
-// not going to worry about it.
-func seekToLine(r io.ReadSeeker, line int) error {
-	_, err := r.Seek(0, io.SeekStart)
-	if err != nil {
-		return err
-	}
-	if line == 0 {
-		return nil
-	}
-	var offset int64
-	current := 0
-	br := bufio.NewReader(r)
-	for {
-		l, _, err := br.ReadLine()
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-		offset += int64(len(l)) + 1
-		current++
-		if current == line {
-			_, err = r.Seek(offset, io.SeekStart)
-			return err
-		}
-	}
 }
 
 func setStatus(t Terminal, status string) error {

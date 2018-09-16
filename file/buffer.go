@@ -1,7 +1,6 @@
 package file
 
 import (
-	"errors"
 	"io"
 	"os"
 )
@@ -10,7 +9,6 @@ type Buffer interface {
 	io.ReadWriteSeeker
 	io.Closer
 
-	Line(n int64) ([]byte, error)
 	Name() string
 }
 
@@ -41,10 +39,6 @@ func (b *defaultBuffer) Seek(offset int64, whence int) (int64, error) {
 
 func (b *defaultBuffer) Close() error {
 	return b.file.Close()
-}
-
-func (b *defaultBuffer) Line(n int64) ([]byte, error) {
-	return nil, errors.New("not implemented")
 }
 
 func (b *defaultBuffer) Name() string {
