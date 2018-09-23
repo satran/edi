@@ -1,131 +1,62 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"io"
+	"time"
 
 	termbox "github.com/nsf/termbox-go"
-	"github.com/satran/edi/file"
 )
 
-func newEditor(t Terminal, names ...string) (*editor, error) {
-	e := &editor{
+// Editor handles FUSE file system and rendering the editor
+type Editor struct {
+	terminal Terminal
+	current  *BufferView
+	console  *BufferView
+	views    map[string]*BufferView
+}
+
+func newEditor(t Terminal, names ...string) (*Editor, error) {
+	e := &Editor{
 		terminal: &terminal{},
-		buffers:  make(map[string]*bufferView),
+		views:    make(map[string]*BufferView),
 	}
 	for i, name := range names {
-		b, err := file.New(name)
+		b, err := NewBuffer(name)
 		if err != nil {
 			return nil, fmt.Errorf("opening %s: %s", name, err)
 		}
-		bs := newBufferView(b)
-		e.buffers[name] = bs
+		v := newBufferView(t, b)
+		e.views[name] = v
 		if i == 0 {
-			e.current = bs
+			e.current = v
 		}
 	}
 	// todo: create buffer when names are empty
 	return e, nil
 }
 
-type editor struct {
-	terminal Terminal
-	current  *bufferView
-	buffers  map[string]*bufferView
-}
-
-func (e *editor) Close() {
-	for _, b := range e.buffers {
-		b.Close()
+func (e *Editor) Close() {
+	for _, v := range e.views {
+		v.Close()
 	}
 }
 
 // ListenAndServe renders the UI and starts the FUSE filesystem
-func (e *editor) ListenAndServe() error {
-	if err := renderBuffer(e.terminal, e.current); err != nil {
+func (e *Editor) ListenAndServe() error {
+	_, h := e.terminal.Size()
+	if err := e.terminal.Clear(termbox.ColorDefault, termbox.ColorDefault); err != nil {
 		return err
 	}
-	return e.handleKeypress()
-}
-
-func renderBuffer(t Terminal, b *bufferView) error {
-	if err := t.Clear(termbox.ColorDefault, termbox.ColorDefault); err != nil {
+	err := e.current.Render(0, h)
+	if err != nil {
 		return err
 	}
-	if _, err := b.seekLine(b.line); err != nil {
-		return err
-	}
-	if err := setStatus(t, fmt.Sprintf("%s %d:%d", b.Name(), b.line, b.column)); err != nil {
-		return err
-	}
-	if err := setContent(t, b); err != nil {
-		return err
-	}
+	e.terminal.Flush()
+	time.Sleep(5 * time.Second)
 	return nil
 }
 
-func setStatus(t Terminal, status string) error {
-	w, _ := termbox.Size()
-	var i int
-	var rn rune
-	// todo: check if ranging of multibyte characters renders this incorrectly
-	for i, rn = range status {
-		if i > w {
-			break
-		}
-		t.SetCellInverse(i, 0, rn)
-	}
-	// Ensure the whole line is with an inversed color
-	if i < w {
-		for i++; i < w; i++ {
-			t.SetCellInverse(i, 0, ' ')
-		}
-	}
-	return t.Flush()
-}
-
-func setContent(t Terminal, r io.Reader) error {
-	br := bufio.NewReader(r)
-	w, h := termbox.Size()
-	// the first line is always for the status
-	for x, y := 0, 1; ; {
-		rn, _, err := br.ReadRune()
-		if err != nil && err != io.EOF {
-			return err
-		}
-		// always wrap the long lines
-		if x > w {
-			y++
-			x = 0
-		}
-		if rn == '\n' {
-			y++
-			x = 0
-			continue
-		}
-		// we have run out of lines
-		if y > h {
-			break
-		}
-
-		if rn == '\t' {
-			for i := 0; i < 8; i, x = i+1, x+1 {
-				t.SetCellDefault(x+i, y, ' ')
-			}
-			continue
-		}
-		t.SetCellDefault(x, y, rn)
-		x++
-		if err == io.EOF {
-			break
-		}
-
-	}
-	return t.Flush()
-}
-
-func (e *editor) handleKeypress() error {
+/*func (e *Editor) handleKeypress() error {
 	for {
 		ev := termbox.PollEvent()
 		switch ev.Type {
@@ -157,3 +88,4 @@ func (e *editor) handleKeypress() error {
 }
 
 type Event struct{}
+*/

@@ -1,53 +1,46 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
 	"io"
-
-	"github.com/satran/edi/file"
+	"os"
 )
 
-type bufferView struct {
-	file.Buffer
-	line    int
-	topline int // line number for the first visible line
-	column  int
-	offset  int64
-	cursorx int
-	cursory int
+type Buffer interface {
+	io.ReadWriteSeeker
+	io.Closer
+
+	Name() string
 }
 
-func newBufferView(b file.Buffer) *bufferView {
-	return &bufferView{
-		Buffer: b,
-		line:   1,
-	}
+type defaultBuffer struct {
+	name string
+	file *os.File
 }
-func (b *bufferView) seekLine(n int) (int64, error) {
-	offset, err := b.Seek(b.offset, io.SeekStart)
+
+func NewBuffer(name string) (Buffer, error) {
+	f, err := os.OpenFile(name, os.O_CREATE|os.O_RDWR, os.ModePerm)
 	if err != nil {
-		return -1, fmt.Errorf("seek to start: %s", err)
+		return nil, err
 	}
-	br := bufio.NewReader(b)
-	if n == b.topline {
-		return offset, nil
-	}
-	for {
-		r, size, err := br.ReadRune()
-		if err != nil {
-			return offset, fmt.Errorf("read rune: %s", err)
-		}
-		b.offset += int64(size)
-		if r == '\n' {
-			b.topline++
-		}
-		if b.topline == n {
-			_, err = b.Seek(b.offset, io.SeekStart)
-			return b.offset, nil
-		}
-		if b.topline > n {
-			return b.offset, fmt.Errorf("can't read line %d", n)
-		}
-	}
+	return &defaultBuffer{name: name, file: f}, nil
+}
+
+func (b *defaultBuffer) Read(p []byte) (int, error) {
+	return b.file.Read(p)
+}
+
+func (b *defaultBuffer) Write(p []byte) (int, error) {
+	return b.file.Write(p)
+}
+
+func (b *defaultBuffer) Seek(offset int64, whence int) (int64, error) {
+	return b.file.Seek(offset, whence)
+}
+
+func (b *defaultBuffer) Close() error {
+	return b.file.Close()
+}
+
+func (b *defaultBuffer) Name() string {
+	return b.name
 }
