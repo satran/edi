@@ -1,0 +1,29 @@
+
+#prompt {
+    border:none;
+    background-image:none;
+    background-color:transparent;
+    -webkit-appearance:none;  
+    -webkit-border-radius:0px;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    outline: none;
+    display: block;
+    width: 100%;
+    padding: .5em;
+    border-top: 1px solid #ccc;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;    
+    box-sizing: border-box;
+    border-radius: 0;
+    font-family: monospace;
+}
+
+.command .cmd {
+    font-family: monospace;
+}
+.command .output {
+    border-left: 2px solid #ccc;
+    padding-left: .5rem;
+}
