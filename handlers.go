@@ -78,7 +78,23 @@ func FileCreateHandler(s *Store, objpath string) http.HandlerFunc {
 
 func FileUpdateHandler(s *Store, objpath string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		id := r.URL.Path[len("/files/"):]
+		f := struct {
+			Content string `json:"content"`
+		}{}
+		if err := json.NewDecoder(r.Body).Decode(&f); err != nil {
+			log.Printf("can't decode json: %s", err)
+			writeError(w, http.StatusBadRequest)
+			return
+		}
+		sr := strings.NewReader(f.Content)
+		if err := s.Update(id, sr); err != nil {
+			log.Printf("error updating: %s", err)
+			writeError(w, http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(fmt.Sprintf(`{"id": "%s"}`, id)))
 	}
 }
 
