@@ -28,6 +28,7 @@ create table if not exists files (
   , object_id text not null
   , created_at integer not null
   , updated_at integer not null
+  , content_type text not null
 )`, `
 create table if not exists log (
     file_id integer not null references files(id) 

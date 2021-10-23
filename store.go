@@ -44,6 +44,13 @@ func (s *Store) Update(id int64, r io.ReadSeeker) error {
 	if err != nil {
 		return err
 	}
+	contentType, err := fileContentType(r)
+	if err != nil {
+		return err
+	}
+	if _, err := r.Seek(0, io.SeekStart); err != nil {
+		return fmt.Errorf("error seeking to begin: %w", err)
+	}
 
 	tx, err := s.Begin()
 	if err != nil {
@@ -57,8 +64,8 @@ func (s *Store) Update(id int64, r io.ReadSeeker) error {
 		return fmt.Errorf("inserting to log: %w", err)
 	}
 
-	_, err = tx.Exec(`update files set object_id=?, updated_at=? where id=?`,
-		hash, now, id)
+	_, err = tx.Exec(`update files set object_id=?, updated_at=?, content_type=? where id=?`,
+		hash, now, contentType, id)
 	if err != nil {
 		return fmt.Errorf("inserting into table: %w", err)
 	}
@@ -75,6 +82,13 @@ func (s *Store) Create(r io.ReadSeeker) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+	contentType, err := fileContentType(r)
+	if err != nil {
+		return 0, err
+	}
+	if _, err := r.Seek(0, io.SeekStart); err != nil {
+		return 0, fmt.Errorf("error seeking to begin: %w", err)
+	}
 
 	tx, err := s.Begin()
 	if err != nil {
@@ -82,8 +96,8 @@ func (s *Store) Create(r io.ReadSeeker) (int64, error) {
 	}
 	defer tx.Rollback()
 	now := time.Now().Unix()
-	res, err := tx.Exec(`insert into files (object_id, created_at, updated_at) values (?, ?, ?)`,
-		hash, now, now)
+	res, err := tx.Exec(`insert into files (object_id, created_at, updated_at, content_type) values (?, ?, ?, ?)`,
+		hash, now, now, contentType)
 	if err != nil {
 		return 0, fmt.Errorf("inserting into table: %w", err)
 	}
@@ -130,10 +144,10 @@ func writeObject(rootDir string, r io.ReadSeeker) (string, error) {
 }
 
 func (s *Store) Get(id int64) (File, error) {
-	stmt := `SELECT object_id, created_at, updated_at from files where id=?`
-	var objectID string
+	stmt := `SELECT object_id, created_at, updated_at, content_type from files where id=?`
+	var objectID, contentType string
 	var createdAt, updatedAt int64
-	err := s.QueryRow(stmt, id).Scan(&objectID, &createdAt, &updatedAt)
+	err := s.QueryRow(stmt, id).Scan(&objectID, &createdAt, &updatedAt, &contentType)
 	if err != nil {
 		return File{}, fmt.Errorf("could query row: %w", err)
 	}
@@ -142,28 +156,21 @@ func (s *Store) Get(id int64) (File, error) {
 		ObjectID:  objectID,
 		CreatedAt: time.Unix(createdAt, 0),
 		UpdatedAt: time.Unix(updatedAt, 0),
+		Type:      contentType,
 	}
 	b, err := os.Open(getObjectPath(s.root, objectID))
 	if err != nil {
 		return File{}, err
 	}
 	defer b.Close()
-	fileType, err := fileContentType(b)
-	if err != nil {
-		return File{}, err
-	}
-	if _, err := b.Seek(0, io.SeekStart); err != nil {
-		return File{}, fmt.Errorf("error seeking to begin: %w", err)
-	}
 	// len of text/plain==10
-	if fileType[:10] == "text/plain" {
+	if f.Type[:10] == "text/plain" {
 		raw, err := ioutil.ReadAll(b)
 		if err != nil {
 			return File{}, err
 		}
 		f.Content = string(raw)
 	}
-	f.Type = fileType
 	return f, nil
 }
 
