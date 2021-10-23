@@ -40,9 +40,29 @@ type Store struct {
 }
 
 func (s *Store) Update(id string, r io.ReadSeeker) error {
-	if err := writeObject(s.root, r, id); err != nil {
-		return err
+	return s.createOrUpdate(r, id)
+}
+
+func (s *Store) Create(r io.ReadSeeker) (string, error) {
+	id := randID()
+	return id, s.createOrUpdate(r, id)
+}
+
+func (s *Store) createOrUpdate(r io.ReadSeeker, id string) error {
+	objectPath := getObjectPath(s.root, id)
+	if err := os.MkdirAll(filepath.Dir(objectPath), os.ModePerm); err != nil {
+		return fmt.Errorf("create object dir: %w", err)
 	}
+
+	f, err := os.OpenFile(objectPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("error creating object file: %w", err)
+	}
+	defer f.Close()
+	if _, err := io.Copy(f, r); err != nil {
+		return fmt.Errorf("error writing object: %w", err)
+	}
+
 	if _, err := r.Seek(0, io.SeekStart); err != nil {
 		return fmt.Errorf("error seeking to begin: %w", err)
 	}
@@ -59,67 +79,18 @@ func (s *Store) Update(id string, r io.ReadSeeker) error {
 		return fmt.Errorf("begin transaction: %w", err)
 	}
 	defer tx.Rollback()
-
 	now := time.Now().Unix()
-	_, err = tx.Exec(`update files set updated_at=?, content_type=? where id=?`,
-		now, contentType, id)
+	_, err = tx.Exec(`
+insert into files (id, created_at, updated_at, content_type) values ($1, $2, $2, $3)
+on conflict (id) do
+update set updated_at=$2, content_type=$3 where id=$1
+`, id, now, contentType)
 	if err != nil {
 		return fmt.Errorf("inserting into table: %w", err)
 	}
-
-	if err := tx.Commit(); err != nil {
-		// todo: how to restore the file if the database was corrupted
-		return fmt.Errorf("commit: %w", err)
-	}
-	return nil
-}
-
-func (s *Store) Create(r io.ReadSeeker) (string, error) {
-	id := randID()
-	if err := writeObject(s.root, r, id); err != nil {
-		return "", err
-	}
-	if _, err := r.Seek(0, io.SeekStart); err != nil {
-		return "", fmt.Errorf("error seeking to begin: %w", err)
-	}
-	contentType, err := fileContentType(r)
-	if err != nil {
-		return "", err
-	}
-	if _, err := r.Seek(0, io.SeekStart); err != nil {
-		return "", fmt.Errorf("error seeking to begin: %w", err)
-	}
-
-	tx, err := s.Begin()
-	if err != nil {
-		return "", fmt.Errorf("begin transaction: %w", err)
-	}
-	defer tx.Rollback()
-	now := time.Now().Unix()
-	_, err = tx.Exec(`insert into files (id, created_at, updated_at, content_type) values (?, ?, ?, ?)`, id, now, now, contentType)
-	if err != nil {
-		return "", fmt.Errorf("inserting into table: %w", err)
-	}
 	if err := tx.Commit(); err != nil {
 		// todo: is it necessary to delete the file here?
-		return "", fmt.Errorf("commit: %w", err)
-	}
-	return id, nil
-}
-
-func writeObject(rootDir string, r io.ReadSeeker, id string) error {
-	objectPath := getObjectPath(rootDir, id)
-	if err := os.MkdirAll(filepath.Dir(objectPath), os.ModePerm); err != nil {
-		return fmt.Errorf("create object dir: %w", err)
-	}
-
-	f, err := os.OpenFile(objectPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		return fmt.Errorf("error creating object file: %w", err)
-	}
-	defer f.Close()
-	if _, err := io.Copy(f, r); err != nil {
-		return fmt.Errorf("error writing object: %w", err)
+		return fmt.Errorf("commit: %w", err)
 	}
 	return nil
 }
