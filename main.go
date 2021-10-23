@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
-	"log"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -36,14 +36,10 @@ type File struct {
 }
 
 func createFile(db *sql.DB, rootDir string, r io.ReadSeeker) (int64, error) {
-	h := sha1.New()
-	if _, err := io.Copy(h, r); err != nil {
-		return 0, fmt.Errorf("creating hash: %w", err)
+	hash, err := genHash(r)
+	if err != nil {
+		return 0, err
 	}
-	if _, err := r.Seek(0, io.SeekStart); err != nil {
-		return 0, fmt.Errorf("error seeking to begin: %w", err)
-	}
-	hash := fmt.Sprintf("%x", h.Sum(nil))
 	filePath := getObjectPath(rootDir, hash)
 	if err := createObjectDir(filePath); err != nil {
 		return 0, fmt.Errorf("create object dir: %w", err)
@@ -63,7 +59,6 @@ func createFile(db *sql.DB, rootDir string, r io.ReadSeeker) (int64, error) {
 	}
 	defer tx.Rollback()
 	now := time.Now()
-	println(hash)
 	res, err := tx.Exec(`insert into files (object_id, created_at, updated_at) values (?, ?, ?)`,
 		hash, now.Unix(), now.Unix())
 	if err != nil {
@@ -85,6 +80,17 @@ func createFile(db *sql.DB, rootDir string, r io.ReadSeeker) (int64, error) {
 	return id, nil
 }
 
+func genHash(r io.ReadSeeker) (string, error) {
+	h := sha1.New()
+	if _, err := io.Copy(h, r); err != nil {
+		return "", fmt.Errorf("creating hash: %w", err)
+	}
+	if _, err := r.Seek(0, io.SeekStart); err != nil {
+		return "", fmt.Errorf("error seeking to begin: %w", err)
+	}
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
+}
+
 func createObjectDir(path string) error {
 	return os.MkdirAll(filepath.Dir(path), os.ModePerm)
 }
@@ -103,10 +109,37 @@ func getFile(db *sql.DB, rootDir string, id int64) (File, error) {
 		CreatedAt: time.Unix(createdAt, 0),
 		UpdatedAt: time.Unix(updatedAt, 0),
 	}
-
 	b, err := os.Open(getObjectPath(rootDir, objectID))
-	log.Println(f, b, err)
+	if err != nil {
+		return File{}, err
+	}
+	defer b.Close()
+	fileType, err := fileContentType(b)
+	if err != nil {
+		return File{}, err
+	}
+	if _, err := b.Seek(0, io.SeekStart); err != nil {
+		return File{}, fmt.Errorf("error seeking to begin: %w", err)
+	}
+	// len of text/plain==10
+	if fileType[:10] == "text/plain" {
+		raw, err := ioutil.ReadAll(b)
+		if err != nil {
+			return File{}, err
+		}
+		f.Content = string(raw)
+	}
+	f.Type = fileType
 	return f, nil
+}
+
+func fileContentType(in io.Reader) (string, error) {
+	// Only the first 512 bytes are used to sniff the content type.
+	raw, err := ioutil.ReadAll(&(io.LimitedReader{R: in, N: 512}))
+	if err != nil {
+		return "", err
+	}
+	return http.DetectContentType(raw), nil
 }
 
 func getObjectPath(rootDir, hash string) string {

@@ -20,7 +20,8 @@ func TestMigrateDB(t *testing.T) {
 }
 
 func TestCreateFile(t *testing.T) {
-	indexpath := filepath.Join(os.TempDir(), "index.db")
+	rootDir := os.TempDir()
+	indexpath := filepath.Join(rootDir, "index.db")
 	db, err := openDB(indexpath)
 	if err != nil {
 		t.Fatalf("couldn't load Index: %s", err)
@@ -29,10 +30,30 @@ func TestCreateFile(t *testing.T) {
 	if err := migrateDB(db); err != nil {
 		t.Fatalf("couldn't migrate: %s", err)
 	}
-	r := strings.NewReader("hello world!")
-	tmp := os.TempDir()
-	if _, err := createFile(db, tmp, r); err != nil {
+	content := "hello world!\n"
+	r := strings.NewReader(content)
+	id, err := createFile(db, rootDir, r)
+	if err != nil {
 		t.Fatalf("couldn't create file: %s", err)
+	}
+
+	f, err := getFile(db, rootDir, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if f.ID != id {
+		t.Fatalf("wrong id, exp: %d got %d", id, f.ID)
+	}
+
+	if f.Content != content {
+		t.Fatalf("expected content :%s, got :%s", content, f.Content)
+	}
+	if f.ObjectID == "" {
+		t.Fatal("expected objectID not to be empty")
+	}
+	if exp := "text/plain; charset=utf-8"; f.Type != exp {
+		t.Fatalf("expected %s, got %s", exp, f.Type)
 	}
 }
 

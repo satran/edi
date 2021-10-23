@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-const migrations = []string{`
+var migrations = []string{`
 create table if not exists files (
     id integer primary key
   , object_id text not null
@@ -41,11 +41,6 @@ func openDB(path string) (*sql.DB, error) {
 }
 
 func migrateDB(db *sql.DB) error {
-	println("migrateDB")
-	r, err := os.ReadFile(migrationPath)
-	if err != nil {
-		return fmt.Errorf("can't open migration file: %s, %w", migrationPath, err)
-	}
 	tx, err := db.Begin()
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
