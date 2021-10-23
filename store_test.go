@@ -37,7 +37,7 @@ func TestStoreMethods(t *testing.T) {
 	if f.ObjectID == "" {
 		t.Fatal("expected objectID not to be empty")
 	}
-	if exp := "text/plain; charset=utf-8"; f.Type != exp {
+	if exp := "text/plain"; f.Type != exp {
 		t.Fatalf("expected %s, got %s", exp, f.Type)
 	}
 

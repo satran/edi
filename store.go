@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -164,7 +165,7 @@ func (s *Store) Get(id int64) (File, error) {
 	}
 	defer b.Close()
 	// len of text/plain==10
-	if f.Type[:10] == "text/plain" {
+	if f.Type == "text/plain" {
 		raw, err := ioutil.ReadAll(b)
 		if err != nil {
 			return File{}, err
@@ -180,7 +181,11 @@ func fileContentType(in io.Reader) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return http.DetectContentType(raw), nil
+	fileType, _, err := mime.ParseMediaType(http.DetectContentType(raw))
+	if err != nil {
+		return "", err
+	}
+	return fileType, nil
 }
 
 func getObjectPath(rootDir, hash string) string {
