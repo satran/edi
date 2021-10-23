@@ -2,42 +2,27 @@ package main
 
 import (
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 )
 
-func TestMigrateDB(t *testing.T) {
-	indexpath := filepath.Join(os.TempDir(), "index.db")
-	db, err := openDB(indexpath)
+func TestStoreMethods(t *testing.T) {
+	s, err := NewStore(os.TempDir())
 	if err != nil {
-		t.Fatalf("couldn't load Index: %s", err)
+		t.Fatal(err)
 	}
-	defer db.Close()
-	if err := migrateDB(db); err != nil {
-		t.Fatalf("couldn't migrate: %s", err)
-	}
-}
-
-func TestCreateFile(t *testing.T) {
-	rootDir := os.TempDir()
-	indexpath := filepath.Join(rootDir, "index.db")
-	db, err := openDB(indexpath)
-	if err != nil {
-		t.Fatalf("couldn't load Index: %s", err)
-	}
-	defer db.Close()
-	if err := migrateDB(db); err != nil {
+	defer s.Close()
+	if err := migrateDB(s.DB); err != nil {
 		t.Fatalf("couldn't migrate: %s", err)
 	}
 	content := "hello world!\n"
 	r := strings.NewReader(content)
-	id, err := createFile(db, rootDir, r)
+	id, err := s.Create(r)
 	if err != nil {
 		t.Fatalf("couldn't create file: %s", err)
 	}
 
-	f, err := getFile(db, rootDir, id)
+	f, err := s.Get(id)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,8 +43,16 @@ func TestCreateFile(t *testing.T) {
 
 	updatedContent := "hello new world!\n"
 	ur := strings.NewReader(updatedContent)
-	if err := updateFile(db, rootDir, id, ur); err != nil {
+	if err := s.Update(id, ur); err != nil {
 		t.Fatal(err)
+	}
+
+	f1, err := s.Get(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if f1.Content != updatedContent {
+		t.Fatalf("expected content :%s, got :%s", updatedContent, f1.Content)
 	}
 }
 
