@@ -36,23 +36,11 @@ type File struct {
 }
 
 func createFile(db *sql.DB, rootDir string, r io.ReadSeeker) (int64, error) {
-	hash, err := genHash(r)
+	hash, err := writeObject(rootDir, r)
 	if err != nil {
 		return 0, err
 	}
-	filePath := getObjectPath(rootDir, hash)
-	if err := createObjectDir(filePath); err != nil {
-		return 0, fmt.Errorf("create object dir: %w", err)
-	}
 
-	w, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.ModePerm)
-	if err != nil {
-		return 0, fmt.Errorf("error creating object file: %w", err)
-	}
-	if _, err := io.Copy(w, r); err != nil {
-		return 0, fmt.Errorf("error writing object: %w", err)
-	}
-	defer w.Close()
 	tx, err := db.Begin()
 	if err != nil {
 		return 0, fmt.Errorf("begin transaction: %w", err)
@@ -80,19 +68,30 @@ func createFile(db *sql.DB, rootDir string, r io.ReadSeeker) (int64, error) {
 	return id, nil
 }
 
-func genHash(r io.ReadSeeker) (string, error) {
+func writeObject(rootDir string, r io.ReadSeeker) (string, error) {
 	h := sha1.New()
 	if _, err := io.Copy(h, r); err != nil {
 		return "", fmt.Errorf("creating hash: %w", err)
 	}
+	hash := fmt.Sprintf("%x", h.Sum(nil))
 	if _, err := r.Seek(0, io.SeekStart); err != nil {
 		return "", fmt.Errorf("error seeking to begin: %w", err)
 	}
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
-}
 
-func createObjectDir(path string) error {
-	return os.MkdirAll(filepath.Dir(path), os.ModePerm)
+	objectPath := getObjectPath(rootDir, hash)
+	if err := os.MkdirAll(filepath.Dir(objectPath), os.ModePerm); err != nil {
+		return "", fmt.Errorf("create object dir: %w", err)
+	}
+
+	w, err := os.OpenFile(objectPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	if err != nil {
+		return "", fmt.Errorf("error creating object file: %w", err)
+	}
+	defer w.Close()
+	if _, err := io.Copy(w, r); err != nil {
+		return "", fmt.Errorf("error writing object: %w", err)
+	}
+	return hash, nil
 }
 
 func getFile(db *sql.DB, rootDir string, id int64) (File, error) {
