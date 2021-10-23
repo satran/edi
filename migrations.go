@@ -24,19 +24,13 @@ func migrateDB(db *sql.DB) error {
 
 var migrations = []string{`
 create table if not exists files (
-    id integer primary key
-  , object_id text not null
+    id text primary key not null
   , created_at integer not null
   , updated_at integer not null
   , content_type text not null
 )`, `
-create table if not exists log (
-    file_id integer not null references files(id) 
-  , object_id text not null
-  , updated_at integer not null
-)`, `
 create table if not exists tags (
-    file_id integer not null references files(id)
+    file_id text not null references files(id)
   , tag text not null
 )`,
 }

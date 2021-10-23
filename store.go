@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/sha1"
 	"database/sql"
 	"fmt"
 	"io"
@@ -40,10 +39,12 @@ type Store struct {
 	*sql.DB
 }
 
-func (s *Store) Update(id int64, r io.ReadSeeker) error {
-	hash, err := writeObject(s.root, r)
-	if err != nil {
+func (s *Store) Update(id string, r io.ReadSeeker) error {
+	if err := writeObject(s.root, r, id); err != nil {
 		return err
+	}
+	if _, err := r.Seek(0, io.SeekStart); err != nil {
+		return fmt.Errorf("error seeking to begin: %w", err)
 	}
 	contentType, err := fileContentType(r)
 	if err != nil {
@@ -60,112 +61,90 @@ func (s *Store) Update(id int64, r io.ReadSeeker) error {
 	defer tx.Rollback()
 
 	now := time.Now().Unix()
-	_, err = tx.Exec(`insert into log (file_id, object_id, updated_at) values (?, ?, ?)`, id, hash, now)
-	if err != nil {
-		return fmt.Errorf("inserting to log: %w", err)
-	}
-
-	_, err = tx.Exec(`update files set object_id=?, updated_at=?, content_type=? where id=?`,
-		hash, now, contentType, id)
+	_, err = tx.Exec(`update files set updated_at=?, content_type=? where id=?`,
+		now, contentType, id)
 	if err != nil {
 		return fmt.Errorf("inserting into table: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		// no need to delete the file, if the person tries to recreate the file, nothing happens
+		// todo: how to restore the file if the database was corrupted
 		return fmt.Errorf("commit: %w", err)
 	}
 	return nil
 }
 
-func (s *Store) Create(r io.ReadSeeker) (int64, error) {
-	hash, err := writeObject(s.root, r)
-	if err != nil {
-		return 0, err
+func (s *Store) Create(r io.ReadSeeker) (string, error) {
+	id := randID()
+	if err := writeObject(s.root, r, id); err != nil {
+		return "", err
+	}
+	if _, err := r.Seek(0, io.SeekStart); err != nil {
+		return "", fmt.Errorf("error seeking to begin: %w", err)
 	}
 	contentType, err := fileContentType(r)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
-	if _, err := r.Seek(0, io.SeekStart); err != nil {
-		return 0, fmt.Errorf("error seeking to begin: %w", err)
-	}
-
-	tx, err := s.Begin()
-	if err != nil {
-		return 0, fmt.Errorf("begin transaction: %w", err)
-	}
-	defer tx.Rollback()
-	now := time.Now().Unix()
-	res, err := tx.Exec(`insert into files (object_id, created_at, updated_at, content_type) values (?, ?, ?, ?)`,
-		hash, now, now, contentType)
-	if err != nil {
-		return 0, fmt.Errorf("inserting into table: %w", err)
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return 0, fmt.Errorf("fetching last id: %w", err)
-	}
-	res, err = tx.Exec(`insert into log (file_id, object_id, updated_at) values (?, ?, ?)`,
-		id, hash, now)
-	if err != nil {
-		return 0, fmt.Errorf("inserting to log: %w", err)
-	}
-	if err := tx.Commit(); err != nil {
-		// no need to delete the file, if the person tries to recreate the file, nothing happens
-		return 0, fmt.Errorf("commit: %w", err)
-	}
-	return id, nil
-}
-
-func writeObject(rootDir string, r io.ReadSeeker) (string, error) {
-	h := sha1.New()
-	if _, err := io.Copy(h, r); err != nil {
-		return "", fmt.Errorf("creating hash: %w", err)
-	}
-	hash := fmt.Sprintf("%x", h.Sum(nil))
 	if _, err := r.Seek(0, io.SeekStart); err != nil {
 		return "", fmt.Errorf("error seeking to begin: %w", err)
 	}
 
-	objectPath := getObjectPath(rootDir, hash)
-	if err := os.MkdirAll(filepath.Dir(objectPath), os.ModePerm); err != nil {
-		return "", fmt.Errorf("create object dir: %w", err)
-	}
-
-	w, err := os.OpenFile(objectPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	tx, err := s.Begin()
 	if err != nil {
-		return "", fmt.Errorf("error creating object file: %w", err)
+		return "", fmt.Errorf("begin transaction: %w", err)
 	}
-	defer w.Close()
-	if _, err := io.Copy(w, r); err != nil {
-		return "", fmt.Errorf("error writing object: %w", err)
+	defer tx.Rollback()
+	now := time.Now().Unix()
+	_, err = tx.Exec(`insert into files (id, created_at, updated_at, content_type) values (?, ?, ?, ?)`, id, now, now, contentType)
+	if err != nil {
+		return "", fmt.Errorf("inserting into table: %w", err)
 	}
-	return hash, nil
+	if err := tx.Commit(); err != nil {
+		// todo: is it necessary to delete the file here?
+		return "", fmt.Errorf("commit: %w", err)
+	}
+	return id, nil
 }
 
-func (s *Store) Get(id int64) (File, error) {
-	stmt := `SELECT object_id, created_at, updated_at, content_type from files where id=?`
-	var objectID, contentType string
+func writeObject(rootDir string, r io.ReadSeeker, id string) error {
+	objectPath := getObjectPath(rootDir, id)
+	if err := os.MkdirAll(filepath.Dir(objectPath), os.ModePerm); err != nil {
+		return fmt.Errorf("create object dir: %w", err)
+	}
+
+	f, err := os.OpenFile(objectPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("error creating object file: %w", err)
+	}
+	defer f.Close()
+	if _, err := io.Copy(f, r); err != nil {
+		return fmt.Errorf("error writing object: %w", err)
+	}
+	return nil
+}
+
+func (s *Store) Get(id string) (File, error) {
+	stmt := `SELECT created_at, updated_at, content_type from files where id=?`
+	var contentType string
 	var createdAt, updatedAt int64
-	err := s.QueryRow(stmt, id).Scan(&objectID, &createdAt, &updatedAt, &contentType)
+	err := s.QueryRow(stmt, id).Scan(&createdAt, &updatedAt, &contentType)
 	if err != nil {
 		return File{}, fmt.Errorf("could query row: %w", err)
 	}
 	f := File{
 		ID:        id,
-		ObjectID:  objectID,
 		CreatedAt: time.Unix(createdAt, 0),
 		UpdatedAt: time.Unix(updatedAt, 0),
 		Type:      contentType,
 	}
-	b, err := os.Open(getObjectPath(s.root, objectID))
-	if err != nil {
-		return File{}, err
-	}
-	defer b.Close()
 	// len of text/plain==10
 	if f.Type == "text/plain" {
+		b, err := os.Open(getObjectPath(s.root, id))
+		if err != nil {
+			return File{}, err
+		}
+		defer b.Close()
 		raw, err := ioutil.ReadAll(b)
 		if err != nil {
 			return File{}, err
@@ -188,19 +167,20 @@ func fileContentType(in io.Reader) (string, error) {
 	return fileType, nil
 }
 
-func getObjectPath(rootDir, hash string) string {
-	dir := hash[:2]
-	file := hash[2:]
-	return filepath.Join(rootDir, "objects", dir, file)
+func getObjectPath(rootDir, name string) string {
+	return filepath.Join(rootDir, "objects", name)
 }
 
 type File struct {
-	ID        int64     `json:"id"`
-	ObjectID  string    `json:"object_id"`
+	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Tags      []string  `json:"tags"`
 	Type      string    `json:"type"`
 	// Content is provided only when the data was a text file
 	Content string `json:"content"`
+}
+
+func randID() string {
+	return RandString(6)
 }

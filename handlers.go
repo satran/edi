@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -13,6 +12,7 @@ import (
 func FilesHandler(s *Store) http.HandlerFunc {
 	getHandler := FileGetHandler(s, "")
 	createHandler := FileCreateHandler(s, "")
+	updateHandler := FileUpdateHandler(s, "")
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		wr := &ResponseWriter{ResponseWriter: w}
@@ -21,6 +21,8 @@ func FilesHandler(s *Store) http.HandlerFunc {
 			getHandler(wr, r)
 		case http.MethodPost:
 			createHandler(wr, r)
+		case http.MethodPut:
+			updateHandler(wr, r)
 		default:
 			writeError(w, http.StatusNotImplemented)
 		}
@@ -31,16 +33,10 @@ func FilesHandler(s *Store) http.HandlerFunc {
 
 func FileGetHandler(s *Store, objpath string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		sid := r.URL.Path[len("/files/"):]
-		id, err := strconv.ParseInt(sid, 10, 64)
-		if err != nil {
-			log.Printf("couldn't parse id: %s, %s", sid, err)
-			writeError(w, http.StatusNotFound)
-			return
-		}
+		id := r.URL.Path[len("/files/"):]
 		f, err := s.Get(id)
 		if err != nil {
-			log.Printf("couldn't get file(%d): %s", id, err)
+			log.Printf("couldn't get file(%s): %s", id, err)
 			writeError(w, http.StatusNotFound)
 			return
 		}
@@ -76,7 +72,7 @@ func FileCreateHandler(s *Store, objpath string) http.HandlerFunc {
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(fmt.Sprintf(`{"id": "%d"}`, id)))
+		w.Write([]byte(fmt.Sprintf(`{"id": "%s"}`, id)))
 	}
 }
 

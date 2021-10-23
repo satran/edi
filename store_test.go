@@ -28,14 +28,11 @@ func TestStoreMethods(t *testing.T) {
 	}
 
 	if f.ID != id {
-		t.Fatalf("wrong id, exp: %d got %d", id, f.ID)
+		t.Fatalf("wrong id, exp: %s got %s", id, f.ID)
 	}
 
 	if f.Content != content {
 		t.Fatalf("expected content :%s, got :%s", content, f.Content)
-	}
-	if f.ObjectID == "" {
-		t.Fatal("expected objectID not to be empty")
 	}
 	if exp := "text/plain"; f.Type != exp {
 		t.Fatalf("expected %s, got %s", exp, f.Type)
@@ -58,8 +55,8 @@ func TestStoreMethods(t *testing.T) {
 
 func TestGetObjectPath(t *testing.T) {
 	tests := map[string]string{
-		"aa2f368177a48ff6b1b8304d21ca584629c57c8a": "root/objects/aa/2f368177a48ff6b1b8304d21ca584629c57c8a",
-		"da39a3ee5e6b4b0d3255bfef95601890afd80709": "root/objects/da/39a3ee5e6b4b0d3255bfef95601890afd80709",
+		"aa2f368177a48ff6b1b8304d21ca584629c57c8a": "root/objects/aa2f368177a48ff6b1b8304d21ca584629c57c8a",
+		"da39a3ee5e6b4b0d3255bfef95601890afd80709": "root/objects/da39a3ee5e6b4b0d3255bfef95601890afd80709",
 	}
 
 	for test, exp := range tests {
