@@ -35,6 +35,37 @@ type File struct {
 	Content string `json:"content"`
 }
 
+func updateFile(db *sql.DB, rootDir string, id int64, r io.ReadSeeker) error {
+	hash, err := writeObject(rootDir, r)
+	if err != nil {
+		return err
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	now := time.Now().Unix()
+	_, err = tx.Exec(`insert into log (file_id, object_id, updated_at) values (?, ?, ?)`, id, hash, now)
+	if err != nil {
+		return fmt.Errorf("inserting to log: %w", err)
+	}
+
+	_, err = tx.Exec(`update files set object_id=?, updated_at=? where id=?`,
+		hash, now, id)
+	if err != nil {
+		return fmt.Errorf("inserting into table: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		// no need to delete the file, if the person tries to recreate the file, nothing happens
+		return fmt.Errorf("commit: %w", err)
+	}
+	return nil
+}
+
 func createFile(db *sql.DB, rootDir string, r io.ReadSeeker) (int64, error) {
 	hash, err := writeObject(rootDir, r)
 	if err != nil {
@@ -46,9 +77,9 @@ func createFile(db *sql.DB, rootDir string, r io.ReadSeeker) (int64, error) {
 		return 0, fmt.Errorf("begin transaction: %w", err)
 	}
 	defer tx.Rollback()
-	now := time.Now()
+	now := time.Now().Unix()
 	res, err := tx.Exec(`insert into files (object_id, created_at, updated_at) values (?, ?, ?)`,
-		hash, now.Unix(), now.Unix())
+		hash, now, now)
 	if err != nil {
 		return 0, fmt.Errorf("inserting into table: %w", err)
 	}

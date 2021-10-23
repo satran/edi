@@ -55,6 +55,12 @@ func TestCreateFile(t *testing.T) {
 	if exp := "text/plain; charset=utf-8"; f.Type != exp {
 		t.Fatalf("expected %s, got %s", exp, f.Type)
 	}
+
+	updatedContent := "hello new world!\n"
+	ur := strings.NewReader(updatedContent)
+	if err := updateFile(db, rootDir, id, ur); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestGetObjectPath(t *testing.T) {
