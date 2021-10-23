@@ -201,6 +201,6 @@ type File struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	Tags      []string  `json:"tags"`
 	Type      string    `json:"type"`
-	// Content holds either the content of the file if text or the link to the file if it is an image
+	// Content is provided only when the data was a text file
 	Content string `json:"content"`
 }
