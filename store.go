@@ -95,6 +95,36 @@ update set updated_at=$2, content_type=$3 where id=$1
 	return nil
 }
 
+func (s *Store) Search(params Query) ([]File, error) {
+	stmt := `select id, created_at, updated_at, content_type from files`
+	var files []File
+	rows, err := s.Query(stmt)
+	if err != nil {
+		return nil, fmt.Errorf("searching files: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		f := File{}
+		var createdAt, updatedAt int64
+		err := rows.Scan(&f.ID, &createdAt, &updatedAt, &f.Type)
+		if err != nil {
+			return nil, fmt.Errorf("scanning file: %w", err)
+		}
+		f.CreatedAt = time.Unix(createdAt, 0)
+		f.UpdatedAt = time.Unix(updatedAt, 0)
+		files = append(files, f)
+	}
+	return files, nil
+}
+
+type Query struct {
+	Page     int
+	PageSize int
+	FromDate *time.Time
+	ToDate   *time.Time
+	Tags     []string
+}
+
 func (s *Store) Get(id string) (File, error) {
 	stmt := `SELECT created_at, updated_at, content_type from files where id=?`
 	var contentType string

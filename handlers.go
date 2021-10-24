@@ -11,6 +11,7 @@ import (
 
 func FilesHandler(s *Store) http.HandlerFunc {
 	getHandler := FileGetHandler(s, "")
+	searchHandler := FileSearchHandler(s, "")
 	createHandler := FileCreateHandler(s, "")
 	updateHandler := FileUpdateHandler(s, "")
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -18,7 +19,11 @@ func FilesHandler(s *Store) http.HandlerFunc {
 		wr := &ResponseWriter{ResponseWriter: w}
 		switch r.Method {
 		case http.MethodGet:
-			getHandler(wr, r)
+			if r.URL.Path == "/files/" {
+				searchHandler(wr, r)
+			} else {
+				getHandler(wr, r)
+			}
 		case http.MethodPost:
 			createHandler(wr, r)
 		case http.MethodPut:
@@ -50,7 +55,18 @@ func FileGetHandler(s *Store, objpath string) http.HandlerFunc {
 
 func FileSearchHandler(s *Store, objpath string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		params := Query{}
+		files, err := s.Search(params)
+		if err != nil {
+			log.Printf("writing json: %s", err)
+			writeError(w, http.StatusInternalServerError)
+			return
+		}
+		if err := json.NewEncoder(w).Encode(&files); err != nil {
+			log.Printf("writing json: %s", err)
+			writeError(w, http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
