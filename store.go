@@ -96,7 +96,7 @@ update set updated_at=$2, content_type=$3 where id=$1
 }
 
 func (s *Store) Search(params Query) ([]File, error) {
-	stmt := `select id, created_at, updated_at, content_type from files`
+	stmt := `select id, created_at, updated_at, content_type from files order by created_at`
 	var files []File
 	rows, err := s.Query(stmt)
 	if err != nil {

@@ -9,36 +9,13 @@ import (
 	"time"
 )
 
-func FilesHandler(s *Store) http.HandlerFunc {
-	getHandler := FileGetHandler(s, "")
-	searchHandler := FileSearchHandler(s, "")
-	createHandler := FileCreateHandler(s, "")
-	updateHandler := FileUpdateHandler(s, "")
+func FileMetaHandler(s *Store, metaPath string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		wr := &ResponseWriter{ResponseWriter: w}
-		switch r.Method {
-		case http.MethodGet:
-			if r.URL.Path == "/files/" {
-				searchHandler(wr, r)
-			} else {
-				getHandler(wr, r)
-			}
-		case http.MethodPost:
-			createHandler(wr, r)
-		case http.MethodPut:
-			updateHandler(wr, r)
-		default:
-			writeError(w, http.StatusNotImplemented)
+		if r.Method != http.MethodGet {
+			writeError(w, http.StatusMethodNotAllowed)
+			return
 		}
-		since := time.Since(start)
-		log.Println(since, wr.StatusCode(), r.Method, r.URL)
-	}
-}
-
-func FileGetHandler(s *Store, objpath string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id := r.URL.Path[len("/files/"):]
+		id := r.URL.Path[len(metaPath):]
 		f, err := s.Get(id)
 		if err != nil {
 			log.Printf("couldn't get file(%s): %s", id, err)
@@ -53,7 +30,7 @@ func FileGetHandler(s *Store, objpath string) http.HandlerFunc {
 	}
 }
 
-func FileSearchHandler(s *Store, objpath string) http.HandlerFunc {
+func FileSearchHandler(s *Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := Query{}
 		files, err := s.Search(params)
@@ -70,7 +47,42 @@ func FileSearchHandler(s *Store, objpath string) http.HandlerFunc {
 	}
 }
 
-func FileCreateHandler(s *Store, objpath string) http.HandlerFunc {
+func FilesHandler(s *Store, path string) http.HandlerFunc {
+	getHandler := FileGetHandler(s, path)
+	createHandler := FileCreateHandler(s)
+	updateHandler := FileUpdateHandler(s, path)
+	return func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		wr := &ResponseWriter{ResponseWriter: w}
+		switch r.Method {
+		case http.MethodGet:
+			getHandler(wr, r)
+		case http.MethodPost:
+			createHandler(wr, r)
+		case http.MethodPut:
+			updateHandler(wr, r)
+		default:
+			writeError(w, http.StatusNotImplemented)
+		}
+		since := time.Since(start)
+		log.Println(since, wr.StatusCode(), r.Method, r.URL)
+	}
+}
+
+func FileGetHandler(s *Store, path string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.URL.Path[len(path):]
+		if len(id) < 1 {
+			log.Println("empty ID requested")
+			writeError(w, http.StatusNotFound)
+			return
+		}
+		objPath := getObjectPath(s.root, id)
+		http.ServeFile(w, r, objPath)
+	}
+}
+
+func FileCreateHandler(s *Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		f := struct {
 			Content string `json:"content"`
@@ -92,9 +104,9 @@ func FileCreateHandler(s *Store, objpath string) http.HandlerFunc {
 	}
 }
 
-func FileUpdateHandler(s *Store, objpath string) http.HandlerFunc {
+func FileUpdateHandler(s *Store, path string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := r.URL.Path[len("/files/"):]
+		id := r.URL.Path[len(path):]
 		f := struct {
 			Content string `json:"content"`
 		}{}

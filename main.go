@@ -19,10 +19,13 @@ func main() {
 	if err := migrateDB(s.DB); err != nil {
 		log.Fatal(err)
 	}
-
-	http.Handle("/files/", FilesHandler(s))
+	http.Handle("/app/", http.StripPrefix("/app/",
+		http.FileServer(http.Dir("./app"))))
+	http.Handle("/search", FileSearchHandler(s))
+	http.Handle("/meta/", FileMetaHandler(s, "/meta/"))
+	http.Handle("/files/", FilesHandler(s, "/files/"))
 	log.Println("Starting server at :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe("0.0.0.0:8080", nil); err != nil {
 		log.Fatal(err)
 	}
 }
