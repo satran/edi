@@ -65,6 +65,8 @@ func AppHandler(s *Store) http.HandlerFunc {
 					return
 				}
 				f.Content = content
+			} else if strings.HasPrefix(f.Type, "image") {
+				f.Type = "image"
 			} else {
 				f.Content = f.ID
 			}
@@ -158,21 +160,34 @@ func FileGetHandler(s *Store) http.HandlerFunc {
 
 func FileCreateHandler(s *Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := r.ParseForm(); err != nil {
+		if err := r.ParseMultipartForm(10 << 20); err != nil { //10 MB
 			log.Printf("couldn't parse form: %s", err)
 			writeError(w, http.StatusBadRequest)
 			return
 		}
 		text := r.PostForm.Get("text")
-		if text == "" {
-			return
-		}
-		sr := strings.NewReader(text)
-		_, err := s.Create(sr)
-		if err != nil {
-			log.Printf("error creating: %s", err)
-			writeError(w, http.StatusInternalServerError)
-			return
+		if text != "" {
+			sr := strings.NewReader(text)
+			_, err := s.Create(sr)
+			if err != nil {
+				log.Printf("error creating: %s", err)
+				writeError(w, http.StatusInternalServerError)
+				return
+			}
+		} else {
+			file, _, err := r.FormFile("file")
+			if err != nil {
+				log.Printf("Error Retrieving the File from form: %s", err)
+				writeError(w, http.StatusBadRequest)
+				return
+			}
+			defer file.Close()
+			_, err = s.Create(file)
+			if err != nil {
+				log.Printf("creating file: %s", err)
+				writeError(w, http.StatusBadRequest)
+				return
+			}
 		}
 		http.Redirect(w, r, "/", 301)
 	}

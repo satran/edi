@@ -37,25 +37,28 @@ a {
 }
 #files {
 }
-/*#prompt {
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    width: 100%;
+
+#prompt {
+    border-top: 1px solid #efefef;
+    padding: 1em;
 }
-#prompt>div {
-    max-width: 800px;
-    margin: 0 auto;
-}*/
 
 #prompt textarea {
+    outline: none;
     width: calc(100% - 2em);
     border: none;
-    border-top: 1px solid #efefef;
     border-radius: 0;
-    padding: 1em;
     font-size: 100%;
+    resize: none;
+    overflow: hidden;
     /*box-shadow: 0px -15px 25px -20px #ccc;*/
+}
+#prompt textarea:focus{
+    border-bottom: 1px solid red;
+}
+#prompt .buttons {
+    text-align: center;
+    padding: 1em 0;
 }
 .file {
     padding: 1em;
@@ -64,6 +67,12 @@ a {
 .file .content{
     white-space: pre-wrap;
     line-height: 1.5;
+}
+.file .content.image {
+    text-align: center;
+}
+.content img {
+    max-width: 100%;
 }
 .file .id {
     font-size: .7em;
@@ -81,10 +90,12 @@ a {
 	background: #000;
 	border-bottom: 1px solid #555;
     }
+    #prompt {
+	border-top: 1px solid #555;
+    }
     #prompt textarea {
 	background: #000;
 	color: #ddd;
-	border-top: 1px solid #555;
     }
     .file {
         border-top: 1px solid #555;
