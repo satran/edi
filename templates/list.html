@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/s/app.css"/>
   </head>
   <body>
-    <div class="container">
+    <div class="container" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
       <div id="files">
 	{{ range .Files }}
 	<div class="file">
@@ -18,14 +18,14 @@
 	  {{ else }}
 	  <div><a href="{{ .ID }}">open</a></div>
 	  {{ end }}
-	  <div class="id"><a href="#f/{{ .ID }}">{{ .ID }}</a></div>
+	  <div class="id"><a href="{{ .ID }}">{{ .ID }}</a></div>
 	</div>
 	{{ end }}
       </div>
       <div id="prompt"><div>
 	  <form enctype="multipart/form-data" method="POST" action="/">
 	    <div class="buttons">
-	      <input type="file" name="file" />
+	      <input id="file-input" type="file" name="file" multiple/>
 	      <input type="submit" value="Save" />
 	    </div>
 	    <textarea id="new-file" name="text" placeholder="or add your new file here..."  oninput="auto_grow(this)"></textarea>

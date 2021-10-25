@@ -28,7 +28,7 @@ func main() {
 	
 	http.Handle("/", Handler(s))
 	log.Println("Starting server at :8080")
-	if err := http.ListenAndServe("127.0.0.1:8080", nil); err != nil {
+	if err := http.ListenAndServe("0.0.0.0:8080", nil); err != nil {
 		log.Fatal(err)
 	}
 }
