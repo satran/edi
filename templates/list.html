@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Dabba</title>
+    <link rel="stylesheet" href="/s/app.css"/>
+  </head>
+  <body>
+    <div class="container">
+      <div id="files">
+	{{ range .Files }}
+	<div class="file">
+	  {{ if (eq .Type "text/plain") }}
+	  <div class="content">{{ .Content }}</div>
+	  {{ else }}
+	  <div><a href="{{ .ID }}">open</a></div>
+	  {{ end }}
+	  <div class="id"><a href="#f/{{ .ID }}">{{ .ID }}</a></div>
+	</div>
+	{{ end }}
+      </div>
+      <div id="prompt"><div>
+	  <form method="POST" action="/">
+	    <textarea id="new-file" name="text" placeholder="Add your new file here..."></textarea>
+	    <input type="file" name="file" />
+	    <input type="submit" value="Save" /> 
+	  </form>
+      </div></div>
+    </div>
+    <script type="text/javascript" src="/s/jquery.js"></script>
+    <script type="text/javascript" src="/s/app.js"></script>
+  </body>
+</html>

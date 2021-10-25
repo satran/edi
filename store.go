@@ -125,6 +125,11 @@ type Query struct {
 	Tags     []string
 }
 
+func (s *Store) GetText(id string) (string, error) {
+	raw, err := ioutil.ReadFile(getObjectPath(s.root, id))
+	return string(raw), err
+}
+
 func (s *Store) Get(id string) (File, error) {
 	stmt := `SELECT created_at, updated_at, content_type from files where id=?`
 	var contentType string

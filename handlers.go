@@ -3,11 +3,85 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 )
+
+func Handler(s *Store) http.HandlerFunc {
+	appHandler := AppHandler(s)
+	getHandler := FileGetHandler(s)
+	metaHandler := FileMetaHandler(s, "/meta/")
+	createHandler := FileCreateHandler(s)
+	updateHandler := FileUpdateHandler(s)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		wr := &ResponseWriter{ResponseWriter: w}
+		switch {
+		case r.URL.Path == "/":
+			switch r.Method {
+			case http.MethodGet:
+				appHandler(wr, r)
+			case http.MethodPost:
+				createHandler(wr, r)
+			}
+		case strings.HasPrefix(r.URL.Path, "/meta"):
+			metaHandler(wr, r)
+		default:
+			switch r.Method {
+			case http.MethodGet:
+				getHandler(wr, r)
+			case http.MethodPost:
+				updateHandler(wr, r)
+			}
+
+		}
+		since := time.Since(start)
+		log.Println(since, wr.StatusCode(), r.Method, r.URL)
+	}
+}
+
+func AppHandler(s *Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var listTemplate = template.Must(template.ParseFiles(filepath.Join("templates", "list.html")))
+
+		files, err := s.Search(Query{})
+		if err != nil {
+			log.Printf("listing files: %s", err)
+			writeError(w, http.StatusInternalServerError)
+			return
+		}
+		ret := make([]File, 0, len(files))
+		for _, f := range files {
+			if f.Type == "text/plain" {
+				content, err := s.GetText(f.ID)
+				if err != nil {
+					log.Printf("cant get text: %s", err)
+					writeError(w, http.StatusInternalServerError)
+					return
+				}
+				f.Content = content
+			} else {
+				f.Content = f.ID
+			}
+			ret = append(ret, f)
+		}
+
+		if err := listTemplate.ExecuteTemplate(w, "list.html",
+			map[string]interface{}{
+				"Files": ret,
+			},
+		); err != nil {
+			log.Printf("executing list template: %s", err)
+			writeError(w, http.StatusInternalServerError)
+			return
+		}
+	}
+}
 
 func FileMetaHandler(s *Store, metaPath string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -48,9 +122,9 @@ func FileSearchHandler(s *Store) http.HandlerFunc {
 }
 
 func FilesHandler(s *Store, path string) http.HandlerFunc {
-	getHandler := FileGetHandler(s, path)
+	getHandler := FileGetHandler(s)
 	createHandler := FileCreateHandler(s)
-	updateHandler := FileUpdateHandler(s, path)
+	updateHandler := FileUpdateHandler(s)
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		wr := &ResponseWriter{ResponseWriter: w}
@@ -69,44 +143,44 @@ func FilesHandler(s *Store, path string) http.HandlerFunc {
 	}
 }
 
-func FileGetHandler(s *Store, path string) http.HandlerFunc {
+func FileGetHandler(s *Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := r.URL.Path[len(path):]
+		id := strings.TrimLeft(r.URL.Path, "/")
+		log.Println("get:", id)
 		if len(id) < 1 {
 			log.Println("empty ID requested")
 			writeError(w, http.StatusNotFound)
 			return
 		}
-		objPath := getObjectPath(s.root, id)
-		http.ServeFile(w, r, objPath)
+		http.ServeFile(w, r, getObjectPath(s.root, id))
 	}
 }
 
 func FileCreateHandler(s *Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		f := struct {
-			Content string `json:"content"`
-		}{}
-		if err := json.NewDecoder(r.Body).Decode(&f); err != nil {
-			log.Printf("can't decode json: %s", err)
+		if err := r.ParseForm(); err != nil {
+			log.Printf("couldn't parse form: %s", err)
 			writeError(w, http.StatusBadRequest)
 			return
 		}
-		sr := strings.NewReader(f.Content)
-		id, err := s.Create(sr)
+		text := r.PostForm.Get("text")
+		if text == "" {
+			return
+		}
+		sr := strings.NewReader(text)
+		_, err := s.Create(sr)
 		if err != nil {
 			log.Printf("error creating: %s", err)
 			writeError(w, http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(fmt.Sprintf(`{"id": "%s"}`, id)))
+		http.Redirect(w, r, "/", 301)
 	}
 }
 
-func FileUpdateHandler(s *Store, path string) http.HandlerFunc {
+func FileUpdateHandler(s *Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := r.URL.Path[len(path):]
+		id := r.URL.Path[1:]
 		f := struct {
 			Content string `json:"content"`
 		}{}

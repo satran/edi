@@ -1,0 +1,97 @@
+body {
+    background: #fff;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    font-size: 100%;
+}
+body, textarea, input {
+    font-family: ui-monospace, Menlo, Monaco, "Inconsolata", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
+}
+a {
+    color: #333;
+}
+
+.container {
+    margin: 0 auto;
+    max-width: 800px;
+    height: 100%;
+    margin-bottom: 3rem;
+}
+#header {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: #fff;
+    border-bottom: 1px solid #ccc;
+}
+#header>div{
+    max-width: 800px;
+    margin: 0 auto;
+}
+#header li {
+    list-style: none;
+    display: inline-block;
+    padding: 1em;
+}
+#files {
+}
+/*#prompt {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+}
+#prompt>div {
+    max-width: 800px;
+    margin: 0 auto;
+}*/
+
+#prompt textarea {
+    width: calc(100% - 2em);
+    border: none;
+    border-top: 1px solid #efefef;
+    border-radius: 0;
+    padding: 1em;
+    font-size: 100%;
+    /*box-shadow: 0px -15px 25px -20px #ccc;*/
+}
+.file {
+    padding: 1em;
+    border-top: 1px solid #efefef;
+}
+.file .content{
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
+.file .id {
+    font-size: .7em;
+    text-align: right;
+}
+@media (prefers-color-scheme: dark) {
+    body {
+        background: #000;
+        color: #ddd;
+    }
+    a {
+        color: #ddd;
+    }
+    #header {
+	background: #000;
+	border-bottom: 1px solid #555;
+    }
+    #prompt textarea {
+	background: #000;
+	color: #ddd;
+	border-top: 1px solid #555;
+    }
+    .file {
+        border-top: 1px solid #555;
+    }
+}
+@media print{
+    body{
+	max-width:none
+    }
+}
