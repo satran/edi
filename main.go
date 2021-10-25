@@ -5,7 +5,11 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"embed"
 )
+
+//go:embed s templates
+var contents embed.FS
 
 func main() {
 	root, err := filepath.Abs(os.Args[1])
@@ -20,12 +24,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	http.Handle("/s/", http.StripPrefix("/s/",
-		http.FileServer(http.Dir("./s"))))
-
+	http.Handle("/s/", http.FileServer(http.FS(contents)))
+	
 	http.Handle("/", Handler(s))
 	log.Println("Starting server at :8080")
-	if err := http.ListenAndServe("0.0.0.0:8080", nil); err != nil {
+	if err := http.ListenAndServe("127.0.0.1:8080", nil); err != nil {
 		log.Fatal(err)
 	}
 }

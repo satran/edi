@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -45,9 +44,10 @@ func Handler(s *Store) http.HandlerFunc {
 	}
 }
 
+var listTemplate = template.Must(template.ParseFS(contents, "templates/*"))
+
 func AppHandler(s *Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var listTemplate = template.Must(template.ParseFiles(filepath.Join("templates", "list.html")))
 
 		files, err := s.Search(Query{})
 		if err != nil {
