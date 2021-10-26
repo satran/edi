@@ -6,8 +6,8 @@
     <title>Dabba</title>
     <link rel="stylesheet" href="/s/app.css"/>
   </head>
-  <body>
-    <div class="container" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+  <body ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+    <div class="container">
       <div id="files">
 	{{ range .Files }}
 	<div class="file">
@@ -25,8 +25,8 @@
       <div id="prompt"><div>
 	  <form enctype="multipart/form-data" method="POST" action="/">
 	    <div class="buttons">
-	      <input id="file-input" type="file" name="file" multiple/>
-	      <input type="submit" value="Save" />
+	      <input class="pure-button" id="file-input" type="file" name="file" multiple/>
+	      <input class="pure-button" type="submit" value="Save" />
 	    </div>
 	    <textarea id="new-file" name="text" placeholder="or add your new file here..."  oninput="auto_grow(this)"></textarea>
 	  </form>
