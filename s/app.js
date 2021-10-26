@@ -39,3 +39,4 @@ function dragOverHandler(ev) {
     // Prevent default behavior (Prevent file from being opened)
     ev.preventDefault();
 }
+

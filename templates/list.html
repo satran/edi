@@ -11,6 +11,11 @@
       <div id="files">
 	{{ range .Files }}
 	<div class="file">
+	  <div class="meta">
+	    <a class="item" href="/edit/{{ .ID }}">edit</a>
+	    <a class="item" href="/date/{{ .UpdatedAt.Format "2006/01/02" }}">{{ .UpdatedAt.Format "2006 Jan 02" }}</a>
+	    <a class="item" href="{{ .ID }}">{{ .ID }}</a>
+	  </div>
 	  {{ if (eq .Type "text/plain") }}
 	  <div class="content text">{{ .Content }}</div>
 	  {{ else if (eq .Type "image") }}
@@ -18,7 +23,6 @@
 	  {{ else }}
 	  <div><a href="{{ .ID }}">{{ .Name }}</a></div>
 	  {{ end }}
-	  <div class="id"><a href="{{ .ID }}">{{ .ID }}</a></div>
 	</div>
 	{{ end }}
       </div>
@@ -28,7 +32,7 @@
 	      <input class="pure-button" id="file-input" type="file" name="file" multiple/>
 	      <input class="pure-button" type="submit" value="Save" />
 	    </div>
-	    <textarea id="new-file" name="text" placeholder="or add your new file here..."  oninput="auto_grow(this)"></textarea>
+	    <textarea class="editor" name="text" autofocus="autofocus" placeholder="or add your new file here..."  oninput="auto_grow(this)"></textarea>
 	  </form>
       </div></div>
     </div>

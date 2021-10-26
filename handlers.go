@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -12,10 +11,11 @@ import (
 
 func Handler(s *Store) http.HandlerFunc {
 	appHandler := AppHandler(s)
+	editViewHandler := EditViewHandler(s, "/edit/")
+	updateHandler := FileUpdateHandler(s, "/edit/")
 	getHandler := FileGetHandler(s)
 	metaHandler := FileMetaHandler(s, "/meta/")
 	createHandler := FileCreateHandler(s)
-	updateHandler := FileUpdateHandler(s)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -30,6 +30,15 @@ func Handler(s *Store) http.HandlerFunc {
 			}
 		case strings.HasPrefix(r.URL.Path, "/meta"):
 			metaHandler(wr, r)
+		case strings.HasPrefix(r.URL.Path, "/edit"):
+			switch r.Method {
+			case http.MethodGet:
+				editViewHandler(wr, r)
+			case http.MethodPost: // has to be post becasue of html forms
+				updateHandler(wr, r)
+			default:
+				writeError(w, http.StatusMethodNotAllowed)
+			}
 		default:
 			switch r.Method {
 			case http.MethodGet:
@@ -44,11 +53,10 @@ func Handler(s *Store) http.HandlerFunc {
 	}
 }
 
-var listTemplate = template.Must(template.ParseFS(contents, "templates/*"))
+var tmpls = template.Must(template.ParseFS(contents, "templates/*"))
 
 func AppHandler(s *Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		files, err := s.Search(Query{})
 		if err != nil {
 			log.Printf("listing files: %s", err)
@@ -73,11 +81,34 @@ func AppHandler(s *Store) http.HandlerFunc {
 			ret = append(ret, f)
 		}
 
-		if err := listTemplate.ExecuteTemplate(w, "list.html",
+		if err := tmpls.ExecuteTemplate(w, "list.html",
 			map[string]interface{}{
 				"Files": ret,
 			},
 		); err != nil {
+			log.Printf("executing list template: %s", err)
+			writeError(w, http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func EditViewHandler(s *Store, path string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := strings.TrimLeft(r.URL.Path, path)
+		log.Println("get:", id)
+		if len(id) < 1 {
+			log.Println("empty ID requested")
+			writeError(w, http.StatusNotFound)
+			return
+		}
+		f, err := s.Get(id)
+		if err != nil {
+			log.Printf("cant get file: %s", err)
+			writeError(w, http.StatusInternalServerError)
+			return
+		}
+		if err := tmpls.ExecuteTemplate(w, "edit.html", &f); err != nil {
 			log.Printf("executing list template: %s", err)
 			writeError(w, http.StatusInternalServerError)
 			return
@@ -120,28 +151,6 @@ func FileSearchHandler(s *Store) http.HandlerFunc {
 			writeError(w, http.StatusInternalServerError)
 			return
 		}
-	}
-}
-
-func FilesHandler(s *Store, path string) http.HandlerFunc {
-	getHandler := FileGetHandler(s)
-	createHandler := FileCreateHandler(s)
-	updateHandler := FileUpdateHandler(s)
-	return func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		wr := &ResponseWriter{ResponseWriter: w}
-		switch r.Method {
-		case http.MethodGet:
-			getHandler(wr, r)
-		case http.MethodPost:
-			createHandler(wr, r)
-		case http.MethodPut:
-			updateHandler(wr, r)
-		default:
-			writeError(w, http.StatusNotImplemented)
-		}
-		since := time.Since(start)
-		log.Println(since, wr.StatusCode(), r.Method, r.URL)
 	}
 }
 
@@ -193,25 +202,27 @@ func FileCreateHandler(s *Store) http.HandlerFunc {
 	}
 }
 
-func FileUpdateHandler(s *Store) http.HandlerFunc {
+func FileUpdateHandler(s *Store, path string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := r.URL.Path[1:]
-		f := struct {
-			Content string `json:"content"`
-		}{}
-		if err := json.NewDecoder(r.Body).Decode(&f); err != nil {
-			log.Printf("can't decode json: %s", err)
+		if err := r.ParseMultipartForm(10 << 20); err != nil { //10 MB
+			log.Printf("couldn't parse form: %s", err)
 			writeError(w, http.StatusBadRequest)
 			return
 		}
-		sr := strings.NewReader(f.Content)
+		id := strings.TrimLeft(r.URL.Path, path)
+		text := r.PostForm.Get("text")
+		if text == "" {
+			log.Print("empty file")
+			writeError(w, http.StatusBadRequest)
+			return
+		}
+		sr := strings.NewReader(text)
 		if err := s.Update(id, sr); err != nil {
 			log.Printf("error updating: %s", err)
 			writeError(w, http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fmt.Sprintf(`{"id": "%s"}`, id)))
+		http.Redirect(w, r, "/edit/"+id, 301)
 	}
 }
 
