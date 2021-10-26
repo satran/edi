@@ -39,7 +39,7 @@ a {
 }
 
 #prompt {
-    margin-bottom: 80%;
+    margin-bottom: 80% !important;
 }
 #prompt, .file {
     border: 1px solid #ddd;
