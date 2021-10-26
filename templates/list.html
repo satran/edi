@@ -16,7 +16,7 @@
 	  {{ else if (eq .Type "image") }}
 	  <div class="content image"><img src="/{{ .ID }}" /></div>
 	  {{ else }}
-	  <div><a href="{{ .ID }}">open</a></div>
+	  <div><a href="{{ .ID }}">{{ .Name }}</a></div>
 	  {{ end }}
 	  <div class="id"><a href="{{ .ID }}">{{ .ID }}</a></div>
 	</div>

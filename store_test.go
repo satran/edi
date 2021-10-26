@@ -17,7 +17,7 @@ func TestStoreMethods(t *testing.T) {
 	}
 	content := "hello world!\n"
 	r := strings.NewReader(content)
-	id, err := s.Create(r)
+	id, err := s.Create(r, "test")
 	if err != nil {
 		t.Fatalf("couldn't create file: %s", err)
 	}

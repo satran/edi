@@ -168,21 +168,21 @@ func FileCreateHandler(s *Store) http.HandlerFunc {
 		text := r.PostForm.Get("text")
 		if text != "" {
 			sr := strings.NewReader(text)
-			_, err := s.Create(sr)
+			_, err := s.Create(sr, "")
 			if err != nil {
 				log.Printf("error creating: %s", err)
 				writeError(w, http.StatusInternalServerError)
 				return
 			}
 		} else {
-			file, _, err := r.FormFile("file")
+			file, meta, err := r.FormFile("file")
 			if err != nil {
 				log.Printf("Error Retrieving the File from form: %s", err)
 				writeError(w, http.StatusBadRequest)
 				return
 			}
 			defer file.Close()
-			_, err = s.Create(file)
+			_, err = s.Create(file, meta.Filename)
 			if err != nil {
 				log.Printf("creating file: %s", err)
 				writeError(w, http.StatusBadRequest)

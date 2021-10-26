@@ -28,6 +28,7 @@ create table if not exists files (
   , created_at integer not null
   , updated_at integer not null
   , content_type text not null
+  , name text not null default ''
 )`, `
 create table if not exists tags (
     file_id text not null references files(id)

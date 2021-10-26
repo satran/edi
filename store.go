@@ -40,15 +40,15 @@ type Store struct {
 }
 
 func (s *Store) Update(id string, r io.ReadSeeker) error {
-	return s.createOrUpdate(r, id)
+	return s.createOrUpdate(r, id, "")
 }
 
-func (s *Store) Create(r io.ReadSeeker) (string, error) {
+func (s *Store) Create(r io.ReadSeeker, name string) (string, error) {
 	id := randID()
-	return id, s.createOrUpdate(r, id)
+	return id, s.createOrUpdate(r, id, name)
 }
 
-func (s *Store) createOrUpdate(r io.ReadSeeker, id string) error {
+func (s *Store) createOrUpdate(r io.ReadSeeker, id string, name string) error {
 	objectPath := getObjectPath(s.root, id)
 	if err := os.MkdirAll(filepath.Dir(objectPath), os.ModePerm); err != nil {
 		return fmt.Errorf("create object dir: %w", err)
@@ -81,10 +81,10 @@ func (s *Store) createOrUpdate(r io.ReadSeeker, id string) error {
 	defer tx.Rollback()
 	now := time.Now().Unix()
 	_, err = tx.Exec(`
-insert into files (id, created_at, updated_at, content_type) values ($1, $2, $2, $3)
+insert into files (id, created_at, updated_at, content_type, name) values ($1, $2, $2, $3, $4)
 on conflict (id) do
 update set updated_at=$2, content_type=$3 where id=$1
-`, id, now, contentType)
+`, id, now, contentType, name)
 	if err != nil {
 		return fmt.Errorf("inserting into table: %w", err)
 	}
@@ -96,7 +96,7 @@ update set updated_at=$2, content_type=$3 where id=$1
 }
 
 func (s *Store) Search(params Query) ([]File, error) {
-	stmt := `select id, created_at, updated_at, content_type from files order by created_at`
+	stmt := `select id, created_at, updated_at, content_type, name from files order by created_at`
 	var files []File
 	rows, err := s.Query(stmt)
 	if err != nil {
@@ -106,7 +106,7 @@ func (s *Store) Search(params Query) ([]File, error) {
 	for rows.Next() {
 		f := File{}
 		var createdAt, updatedAt int64
-		err := rows.Scan(&f.ID, &createdAt, &updatedAt, &f.Type)
+		err := rows.Scan(&f.ID, &createdAt, &updatedAt, &f.Type, &f.Name)
 		if err != nil {
 			return nil, fmt.Errorf("scanning file: %w", err)
 		}
@@ -131,10 +131,10 @@ func (s *Store) GetText(id string) (string, error) {
 }
 
 func (s *Store) Get(id string) (File, error) {
-	stmt := `SELECT created_at, updated_at, content_type from files where id=?`
-	var contentType string
+	stmt := `SELECT name, created_at, updated_at, content_type from files where id=?`
+	var name, contentType string
 	var createdAt, updatedAt int64
-	err := s.QueryRow(stmt, id).Scan(&createdAt, &updatedAt, &contentType)
+	err := s.QueryRow(stmt, id).Scan(&name, &createdAt, &updatedAt, &contentType)
 	if err != nil {
 		return File{}, fmt.Errorf("could query row: %w", err)
 	}
@@ -143,6 +143,7 @@ func (s *Store) Get(id string) (File, error) {
 		CreatedAt: time.Unix(createdAt, 0),
 		UpdatedAt: time.Unix(updatedAt, 0),
 		Type:      contentType,
+		Name:      name,
 	}
 	// len of text/plain==10
 	if f.Type == "text/plain" {
@@ -185,6 +186,7 @@ type File struct {
 	Type      string    `json:"type"`
 	// Content is provided only when the data was a text file
 	Content string `json:"content"`
+	Name    string `json:"name"`
 }
 
 func randID() string {
