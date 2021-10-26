@@ -38,6 +38,9 @@ a {
 #files {
 }
 
+#prompt {
+    margin-bottom: 80%;
+}
 #prompt, .file {
     border: 1px solid #ddd;
     padding: 1em;

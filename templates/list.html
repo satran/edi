@@ -12,7 +12,7 @@
 	{{ range .Files }}
 	<div class="file">
 	  <div class="meta">
-	    <a class="item" href="/edit/{{ .ID }}">edit</a>
+	    <a class="item" href="/edit/{{ .ID }}">Edit</a>
 	    <a class="item" href="/date/{{ .UpdatedAt.Format "2006/01/02" }}">{{ .UpdatedAt.Format "2006 Jan 02" }}</a>
 	    <a class="item" href="{{ .ID }}">{{ .ID }}</a>
 	  </div>
