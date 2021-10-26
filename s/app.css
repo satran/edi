@@ -116,3 +116,13 @@ textarea.editor {
 	max-width:none
     }
 }
+@media screen and (max-width: 800px) {
+  #prompt, .file {
+      border-right: none;
+      border-left: none;
+      border-bottom: none;
+      padding: 1em;
+      margin: 0;
+      border-radius: 0;
+  }
+}
