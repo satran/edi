@@ -95,7 +95,7 @@ func AppHandler(s *Store) http.HandlerFunc {
 
 func EditViewHandler(s *Store, path string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := strings.TrimLeft(r.URL.Path, path)
+		id := r.URL.Path[len(path):]
 		log.Println("get:", id)
 		if len(id) < 1 {
 			log.Println("empty ID requested")
@@ -209,7 +209,7 @@ func FileUpdateHandler(s *Store, path string) http.HandlerFunc {
 			writeError(w, http.StatusBadRequest)
 			return
 		}
-		id := strings.TrimLeft(r.URL.Path, path)
+		id := r.URL.Path[len(path):]
 		text := r.PostForm.Get("text")
 		if text == "" {
 			log.Print("empty file")

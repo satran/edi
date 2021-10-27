@@ -27,7 +27,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	srv := &http.Server{Addr: "0.0.0.0:8080"}
+	srv := &http.Server{Addr: "127.0.0.1:8080"}
 	http.Handle("/s/", http.FileServer(http.FS(contents)))
 	http.Handle("/", Handler(s))
 
