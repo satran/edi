@@ -42,7 +42,7 @@ a {
     margin-bottom: 80% !important;
 }
 #prompt, .file {
-    border: 1px solid #ddd;
+    border-top: 1px solid #ddd;
     padding: 1em;
     margin: .5em;
     border-radius: .25rem;
@@ -104,7 +104,7 @@ textarea.editor {
 	border-bottom: 1px solid #555;
     }
     #prompt,.file {
-	border: 1px solid #555;
+	border-top: 1px solid #555;
     }
     #prompt textarea {
 	background: #000;
