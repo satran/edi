@@ -9,9 +9,9 @@ import (
 	"time"
 )
 
-func Handler(s *Store) http.HandlerFunc {
-	appHandler := AppHandler(s)
-	editViewHandler := EditViewHandler(s, "/edit/")
+func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
+	appHandler := AppHandler(s, tmpls)
+	editViewHandler := EditViewHandler(s, "/edit/", tmpls)
 	updateHandler := FileUpdateHandler(s, "/edit/")
 	getHandler := FileGetHandler(s)
 	metaHandler := FileMetaHandler(s, "/meta/")
@@ -53,9 +53,7 @@ func Handler(s *Store) http.HandlerFunc {
 	}
 }
 
-var tmpls = template.Must(template.ParseFS(contents, "templates/*"))
-
-func AppHandler(s *Store) http.HandlerFunc {
+func AppHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		files, err := s.Search(Query{})
 		if err != nil {
@@ -93,7 +91,7 @@ func AppHandler(s *Store) http.HandlerFunc {
 	}
 }
 
-func EditViewHandler(s *Store, path string) http.HandlerFunc {
+func EditViewHandler(s *Store, path string, tmpls *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.URL.Path[len(path):]
 		log.Println("get:", id)
