@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"flag"
 	"log"
 	"net/http"
 	"os"
@@ -14,7 +15,11 @@ import (
 var contents embed.FS
 
 func main() {
-	root, err := filepath.Abs(os.Args[1])
+	static := flag.String("static", "", "Render static files from folder")
+	dir := flag.String("dir", ".", "directory that stores the data")
+	addr := flag.String("addr", "127.0.0.1:8080", "addr and port to serve from")
+	flag.Parse()
+	root, err := filepath.Abs(*dir)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -27,12 +32,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	srv := &http.Server{Addr: "127.0.0.1:8080"}
-	http.Handle("/s/", http.FileServer(http.FS(contents)))
+	srv := &http.Server{Addr: *addr}
+	if *static != "" {
+		http.Handle("/s/", http.StripPrefix("/s/", http.FileServer(http.Dir(*static))))
+	} else {
+		http.Handle("/s/", http.FileServer(http.FS(contents)))
+	}
 	http.Handle("/", Handler(s))
 
 	go func() {
-		log.Println("Starting server at :8080")
+		log.Printf("Starting server %s", *addr)
 		if err := srv.ListenAndServe(); err != nil {
 			log.Fatal(err)
 		}
