@@ -1,169 +1,165 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
-
-	_ "github.com/mattn/go-sqlite3"
+	"strings"
 )
 
-func NewStore(root string) (*Store, error) {
-	s := Store{root: root}
-	path := filepath.Join(root, "index.db")
-	f, err := os.OpenFile(path, os.O_CREATE, 0666)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	f.Close()
-
-	db, err := sql.Open("sqlite3", path)
-	if err != nil {
-		return nil, fmt.Errorf("could open db: %w", err)
-	}
-	db.SetMaxOpenConns(1)
-	s.DB = db
-
-	return &s, nil
-}
-
 type Store struct {
-	root string // path for both sqlite db and objects
-	*sql.DB
+	root string
 }
 
-func (s *Store) Update(id string, r io.ReadSeeker) error {
-	return s.createOrUpdate(r, id, "")
+func NewStore(root string) *Store {
+	return &Store{root: root}
 }
 
-func (s *Store) Create(r io.ReadSeeker, name string) (string, error) {
-	id := randID()
-	return id, s.createOrUpdate(r, id, name)
-}
-
-func (s *Store) createOrUpdate(r io.ReadSeeker, id string, name string) error {
-	objectPath := getObjectPath(s.root, id)
-	if err := os.MkdirAll(filepath.Dir(objectPath), os.ModePerm); err != nil {
-		return fmt.Errorf("create object dir: %w", err)
-	}
-
-	f, err := os.OpenFile(objectPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+func (s *Store) Get(name string) (*File, error) {
+	f, err := os.Open(s.path(name))
 	if err != nil {
-		return fmt.Errorf("error creating object file: %w", err)
+		return nil, fmt.Errorf("open file %q: %w", name, err)
+	}
+	meta, err := s.Meta(name)
+	if err != nil {
+		f.Close()
+		return nil, err
+	}
+	type_, err := fileContentType(f)
+	if err != nil {
+		f.Close()
+		return nil, err
+	}
+	println(type_)
+	file := File{
+		ReadWriteSeeker: f,
+		Name:            name,
+		Meta:            meta,
+		Type:            type_,
+		path:            s.path(name),
+		close:           f.Close,
+	}
+	if err := file.SeekStart(); err != nil {
+		file.Close()
+		return nil, err
+	}
+	return &file, err
+}
+
+func (s *Store) Meta(name string) (Meta, error) {
+	raw, err := ioutil.ReadFile(s.metaPath(name))
+	if err != nil {
+		return nil, fmt.Errorf("reading meta file %q: %w", name, err)
+	}
+	lines := strings.Split(string(raw), "\n")
+	m := make(map[string]string)
+	for i, line := range lines {
+		if len(line) == 0 || strings.HasPrefix(line, "#") {
+			continue
+		}
+		chunks := strings.SplitN(line, ":", 2)
+		if len(chunks) != 2 {
+			return nil, fmt.Errorf("meta file %q corrupted on line %d: %s", name, i, line)
+		}
+		m[chunks[0]] = chunks[1]
+	}
+	return Meta(m), nil
+}
+
+func (s *Store) Write(name string, r io.Reader, meta Meta) error {
+	path := s.path(name)
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+	if err != nil {
+		return fmt.Errorf("creating file %q: %w", name, err)
 	}
 	defer f.Close()
-	if _, err := io.Copy(f, r); err != nil {
-		return fmt.Errorf("error writing object: %w", err)
+	_, err = io.Copy(f, r)
+	if err != nil {
+		return fmt.Errorf("write file %q: %w", name, err)
 	}
+	return s.WriteMeta(name, meta)
+}
 
-	if _, err := r.Seek(0, io.SeekStart); err != nil {
-		return fmt.Errorf("error seeking to begin: %w", err)
-	}
-	contentType, err := fileContentType(r)
+func (s *Store) WriteMeta(name string, meta Meta) error {
+	path := s.metaPath(name)
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating file %q: %w", name, err)
 	}
-	if _, err := r.Seek(0, io.SeekStart); err != nil {
-		return fmt.Errorf("error seeking to begin: %w", err)
-	}
-
-	tx, err := s.Begin()
-	if err != nil {
-		return fmt.Errorf("begin transaction: %w", err)
-	}
-	defer tx.Rollback()
-	now := time.Now().Unix()
-	_, err = tx.Exec(`
-insert into files (id, created_at, updated_at, content_type, name) values ($1, $2, $2, $3, $4)
-on conflict (id) do
-update set updated_at=$2, content_type=$3 where id=$1
-`, id, now, contentType, name)
-	if err != nil {
-		return fmt.Errorf("inserting into table: %w", err)
-	}
-	if err := tx.Commit(); err != nil {
-		// todo: is it necessary to delete the file here?
-		return fmt.Errorf("commit: %w", err)
+	defer f.Close()
+	for key, value := range meta {
+		fmt.Fprintf(f, "%s:%s", key, value)
 	}
 	return nil
 }
 
-func (s *Store) Search(params Query) ([]File, error) {
-	stmt := `select id, created_at, updated_at, content_type, name from files order by created_at`
-	var files []File
-	rows, err := s.Query(stmt)
+func (s *Store) path(name string) string {
+	return filepath.Join(s.root, "objects", name+".dabba")
+}
+
+func (s *Store) metaPath(name string) string {
+	return filepath.Join(s.root, "meta", name+".meta")
+}
+
+type File struct {
+	io.ReadWriteSeeker
+	Name  string
+	Type  string
+	Meta  Meta
+	path  string
+	close func() error
+}
+
+func (f *File) Close() error {
+	return f.close()
+}
+
+func (f *File) IsText() bool {
+	return strings.HasPrefix(f.Type, "text/plain")
+}
+
+func (f *File) IsImage() bool {
+	for _, t := range []string{
+		"image/avif",
+		"image/gif",
+		"image/jpeg",
+		"image/jpeg",
+		"image/png",
+		"image/svg+xml",
+		"image/webp",
+	} {
+		if f.Type == t {
+			return true
+		}
+	}
+	return false
+}
+
+func (f *File) Content() string {
+	content, err := ioutil.ReadAll(f)
 	if err != nil {
-		return nil, fmt.Errorf("searching files: %w", err)
+		// for now return the parser error as content
+		return err.Error()
 	}
-	defer rows.Close()
-	for rows.Next() {
-		f := File{}
-		var createdAt, updatedAt int64
-		err := rows.Scan(&f.ID, &createdAt, &updatedAt, &f.Type, &f.Name)
-		if err != nil {
-			return nil, fmt.Errorf("scanning file: %w", err)
-		}
-		f.CreatedAt = time.Unix(createdAt, 0)
-		f.UpdatedAt = time.Unix(updatedAt, 0)
-		files = append(files, f)
-	}
-	return files, nil
+	return string(content)
 }
 
-type Query struct {
-	Page     int
-	PageSize int
-	FromDate *time.Time
-	ToDate   *time.Time
-	Tags     []string
+func (f *File) SeekStart() error {
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return fmt.Errorf("error seeking to begin: %w", err)
+	}
+	return nil
 }
 
-func (s *Store) GetText(id string) (string, error) {
-	raw, err := ioutil.ReadFile(getObjectPath(s.root, id))
-	return string(raw), err
-}
+type Meta map[string]string
 
-func (s *Store) Get(id string) (File, error) {
-	stmt := `SELECT name, created_at, updated_at, content_type from files where id=?`
-	var name, contentType string
-	var createdAt, updatedAt int64
-	err := s.QueryRow(stmt, id).Scan(&name, &createdAt, &updatedAt, &contentType)
-	if err != nil {
-		return File{}, fmt.Errorf("could query row: %w", err)
-	}
-	f := File{
-		ID:        id,
-		CreatedAt: time.Unix(createdAt, 0),
-		UpdatedAt: time.Unix(updatedAt, 0),
-		Type:      contentType,
-		Name:      name,
-	}
-	// len of text/plain==10
-	if f.Type == "text/plain" {
-		b, err := os.Open(getObjectPath(s.root, id))
-		if err != nil {
-			return File{}, err
-		}
-		defer b.Close()
-		raw, err := ioutil.ReadAll(b)
-		if err != nil {
-			return File{}, err
-		}
-		f.Content = string(raw)
-	}
-	return f, nil
-}
-
-func fileContentType(in io.Reader) (string, error) {
+func fileContentType(r io.ReadSeeker) (string, error) {
 	// Only the first 512 bytes are used to sniff the content type.
-	raw, err := ioutil.ReadAll(&(io.LimitedReader{R: in, N: 512}))
+	raw, err := ioutil.ReadAll(&(io.LimitedReader{R: r, N: 512}))
 	if err != nil {
 		return "", err
 	}
@@ -172,23 +168,4 @@ func fileContentType(in io.Reader) (string, error) {
 		return "", err
 	}
 	return fileType, nil
-}
-
-func getObjectPath(rootDir, name string) string {
-	return filepath.Join(rootDir, "objects", name)
-}
-
-type File struct {
-	ID        string    `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Tags      []string  `json:"tags"`
-	Type      string    `json:"type"`
-	// Content is provided only when the data was a text file
-	Content string `json:"content"`
-	Name    string `json:"name"`
-}
-
-func randID() string {
-	return RandString(6)
 }

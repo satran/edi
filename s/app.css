@@ -12,12 +12,13 @@ a {
     color: #333;
 }
 
-.container {
-    margin: 0 auto;
-    max-width: 800px;
-    height: 100%;
-    margin-bottom: 3rem;
+.hidden {
+    display: none;
 }
+.btn {
+    pointer: cursor;
+}
+
 #header {
     position: fixed;
     left: 0;
@@ -27,27 +28,38 @@ a {
     border-bottom: 1px solid #ccc;
 }
 #header>div{
-    max-width: 800px;
+    max-width: 33em;;
     margin: 0 auto;
 }
-#header li {
-    list-style: none;
+#header .item {
     display: inline-block;
     padding: 1em;
 }
-#files {
+#header .item.right{
+    float: right;
+    border-left: 1px solid #ccc;
+}
+.container {
+    margin: 0 auto;
+    margin-top: 3em;
+    max-width: 33em;
+    height: 100%;
+    margin-bottom: 3rem;
 }
 
-#prompt {
-    margin-bottom: 80% !important;
+input.title {
+    width: 100%;
+    border: none;
+    font-size: 100%;
+    padding: 1em 0;
+    border-bottom: 1px solid;
+    font-weight: bold;
+    outline: none;
+    background: none;
 }
-#prompt, .file {
-    border-top: 1px solid #ddd;
-    padding: 1em;
-    margin: .5em;
-    border-radius: .25rem;
+input.title:focus {
+    border-bottom: 1px solid red;
 }
-
 textarea.editor {
     outline: none;
     width: 100%;
@@ -56,19 +68,24 @@ textarea.editor {
     font-size: 100%;
     resize: none;
     overflow: hidden;
-    line-height: 1.5;
-    /*box-shadow: 0px -15px 25px -20px #ccc;*/
+    background: none;
+    margin-bottom: 80% !important;
 }
-#prompt textarea:focus{
+textarea.editor:focus{
     border-bottom: 1px solid red;
 }
-#prompt .buttons {
-    text-align: center;
+
+.file .title {
+    border-bottom: 1px solid #cccccc;
+    padding: 1em 0;
+    font-weight: bold;
+}
+.file .content, textarea.editor {
+    line-height: 1.5;
     padding: 1em 0;
 }
 .file .content{
     white-space: pre-wrap;
-    line-height: 1.5;
 }
 .file .content.image {
     text-align: center;
@@ -76,21 +93,7 @@ textarea.editor {
 .content img {
     max-width: 100%;
 }
-.meta {
-    text-align: right;
-    border: none;
-    padding-bottom: .5em;
-}
-.meta .item {
-    padding-left: .5em;
-    border-left: 1px solid;
-    text-decoration: none;
-    text-transform: uppercase;
-    font-size: .9em;
-}
-.meta .item:first-child {
-    border-left: none;
-}
+
 @media (prefers-color-scheme: dark) {
     body {
         background: #000;
@@ -103,10 +106,14 @@ textarea.editor {
 	background: #000;
 	border-bottom: 1px solid #555;
     }
-    #prompt,.file {
-	border-top: 1px solid #555;
+    #header .item.right{
+	border-left: 1px solid #555;
     }
-    #prompt textarea {
+    input.title {
+	background: none;
+	color: #ddd;
+    }
+    textarea.editor {
 	background: #000;
 	color: #ddd;
     }
@@ -117,12 +124,8 @@ textarea.editor {
     }
 }
 @media screen and (max-width: 800px) {
-  #prompt, .file {
-      border-right: none;
-      border-left: none;
-      border-bottom: none;
+  .file {
       padding: 1em;
       margin: 0;
-      border-radius: 0;
   }
 }

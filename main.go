@@ -25,14 +25,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	s, err := NewStore(root)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer s.Close()
-	if err := migrateDB(s.DB); err != nil {
-		log.Fatal(err)
-	}
+	s := NewStore(root)
 
 	var tmpls *template.Template
 	if *templateDir != "" {
@@ -63,7 +56,6 @@ func main() {
 	signal.Notify(c, os.Interrupt)
 	<-c
 	log.Println("shutting down")
-	s.Close()
 	if err := srv.Shutdown(context.TODO()); err != nil {
 		panic(err)
 	}

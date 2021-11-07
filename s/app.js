@@ -5,11 +5,12 @@ function auto_grow(element) {
 }
 
 function dropHandler(ev) {
-    let fileInput = document.getElementById("file-input");
+    const fileInput = document.getElementById("file-input");
     console.log('File(s) dropped');
 
     // Prevent default behavior (Prevent file from being opened)
     ev.preventDefault();
+    let names = "";
     let dT = new DataTransfer();
     if (ev.dataTransfer.items) {
 	// Use DataTransferItemList interface to access the file(s)
@@ -19,6 +20,7 @@ function dropHandler(ev) {
 		var file = ev.dataTransfer.items[i].getAsFile();
 		console.log('... file[' + i + '].name = ' + file.name);
 		dT.items.add(file);
+		names += file.name + ",";
 	    }
 	}
     } else {
@@ -29,14 +31,17 @@ function dropHandler(ev) {
 		var file = ev.dataTransfer.files[i].getAsFile();
 		console.log('... file[' + i + '].name = ' + file.name);
 		dT.items.add(file);
+		names += file.name + ",";
 	    }
 	}
     }
     fileInput.files = dT.files;
+    const nameInput = document.querySelector('input[name="name"]');
+    nameInput.value = names.slice(0, -1);
+    document.querySelector(".editor").hidden = true;
 }
 
 function dragOverHandler(ev) {
     // Prevent default behavior (Prevent file from being opened)
     ev.preventDefault();
 }
-
