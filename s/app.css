@@ -18,6 +18,9 @@ a {
 .btn {
     pointer: cursor;
 }
+.spacer {
+    padding: 1em;
+}
 
 #header {
     position: fixed;
@@ -47,17 +50,26 @@ a {
     margin-bottom: 3rem;
 }
 
-input.title {
+.label.right {
+    text-align: right;
+}
+input.field.label {
+    padding-top: 0;
+}
+
+input.field {
     width: 100%;
     border: none;
     font-size: 100%;
     padding: 1em 0;
     border-bottom: 1px solid;
-    font-weight: bold;
     outline: none;
     background: none;
 }
-input.title:focus {
+input.title {
+    font-weight: bold;
+}
+input.field:focus {
     border-bottom: 1px solid red;
 }
 textarea.editor {
@@ -109,7 +121,7 @@ textarea.editor:focus{
     #header .item.right{
 	border-left: 1px solid #555;
     }
-    input.title {
+    input.field {
 	background: none;
 	color: #ddd;
     }

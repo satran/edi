@@ -25,7 +25,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	s := NewStore(root)
+	s, err := NewStore(root)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	var tmpls *template.Template
 	if *templateDir != "" {

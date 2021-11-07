@@ -10,6 +10,7 @@ import (
 )
 
 func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
+	config := ConfigHandler(s, tmpls)
 	get := FileGetHandler(s, tmpls)
 	staticGet := FileStaticHandler(s, "/_raw/")
 	new_ := NewHandler(s, tmpls)
@@ -23,6 +24,21 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 		switch {
 		case r.URL.Path == "/":
 			switch r.Method {
+			case http.MethodGet:
+				if s.Index() == "" {
+					http.Redirect(w, r, "/_config",
+						http.StatusTemporaryRedirect)
+				} else {
+					http.Redirect(w, r, "/"+s.Index(),
+						http.StatusTemporaryRedirect)
+				}
+			}
+		case r.URL.Path == "/_config":
+			switch r.Method {
+			case http.MethodGet:
+				config(wr, r)
+			case http.MethodPost:
+
 			}
 		case r.URL.Path == "/_new":
 			switch r.Method {
@@ -36,8 +52,6 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 			case http.MethodGet:
 				staticGet(wr, r)
 			}
-		case strings.HasPrefix(r.URL.Path, "/meta"):
-
 		case strings.HasPrefix(r.URL.Path, "/edit"):
 			switch r.Method {
 			case http.MethodGet:
@@ -45,7 +59,6 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 			case http.MethodPost:
 				update(wr, r)
 			}
-
 		default:
 			switch r.Method {
 			case http.MethodGet:
@@ -78,6 +91,16 @@ func EditHandler(s *Store, tmpls *template.Template, path string) http.HandlerFu
 			return
 		}
 		if err := tmpls.ExecuteTemplate(w, "new.html", file); err != nil {
+			log.Printf("executing list template: %s", err)
+			writeError(w, http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func ConfigHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := tmpls.ExecuteTemplate(w, "config.html", s.config); err != nil {
 			log.Printf("executing list template: %s", err)
 			writeError(w, http.StatusInternalServerError)
 			return
@@ -152,7 +175,7 @@ func FileWriteHandler(s *Store, path string) http.HandlerFunc {
 			writeError(w, http.StatusBadRequest)
 			return
 		}
-		http.Redirect(w, r, "/"+name, 301)
+		http.Redirect(w, r, "/"+name, http.StatusSeeOther)
 	}
 }
 

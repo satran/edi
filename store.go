@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,11 +13,26 @@ import (
 )
 
 type Store struct {
-	root string
+	root   string
+	config *Config
 }
 
-func NewStore(root string) *Store {
-	return &Store{root: root}
+func NewStore(root string) (*Store, error) {
+	// Create the file if it doesn't exist
+	f, err := os.OpenFile(filepath.Join(root, "config.json"), os.O_CREATE|os.O_RDWR, 0600)
+	if err != nil {
+		return nil, fmt.Errorf("can't open settings file: %w", err)
+	}
+	defer f.Close()
+	c := &Config{}
+	if err := json.NewDecoder(f).Decode(c); err != nil {
+		return nil, fmt.Errorf("decode settings file: %w", err)
+	}
+	return &Store{root: root, config: c}, nil
+}
+
+type Config struct {
+	StartFile string `json:"start-file"`
 }
 
 func (s *Store) Get(name string) (*File, error) {
@@ -95,6 +111,10 @@ func (s *Store) WriteMeta(name string, meta Meta) error {
 		fmt.Fprintf(f, "%s:%s", key, value)
 	}
 	return nil
+}
+
+func (s *Store) Index() string {
+	return s.config.StartFile
 }
 
 func (s *Store) path(name string) string {
