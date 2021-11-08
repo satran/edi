@@ -21,7 +21,13 @@ a {
 .spacer {
     padding: 1em;
 }
-
+.label {
+    font-size: .8em;
+    border: 1px solid;
+    border-radius: 3px;
+    padding: .1em .3em;
+    text-decoration: none;
+}
 #header {
     position: fixed;
     left: 0;

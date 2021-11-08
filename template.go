@@ -42,9 +42,8 @@ func (t *Template) Shell(args string) string {
 		fmt.Sprintf("PATH=%s", path),
 	)
 	cmd.Dir = filepath.Join(t.root, "objects")
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return err.Error()
-	}
+	// do nothing as it just shows error code
+	//return err.Error()
+	out, _ := cmd.CombinedOutput()
 	return string(out)
 }

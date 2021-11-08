@@ -121,11 +121,11 @@ func (s *Store) Index() string {
 }
 
 func (s *Store) path(name string) string {
-	return filepath.Join(s.root, "objects", name+".dabba")
+	return filepath.Join(s.root, "objects", name)
 }
 
 func (s *Store) metaPath(name string) string {
-	return filepath.Join(s.root, "meta", name+".meta")
+	return filepath.Join(s.root, "meta", name)
 }
 
 type File struct {
