@@ -39,7 +39,7 @@ type Config struct {
 }
 
 func (s *Store) Get(name string) (*File, error) {
-	f, err := os.Open(s.path(name))
+	f, err := os.OpenFile(s.path(name), os.O_CREATE|os.O_RDONLY, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("open file %q: %w", name, err)
 	}
@@ -53,7 +53,6 @@ func (s *Store) Get(name string) (*File, error) {
 		f.Close()
 		return nil, err
 	}
-	println(type_)
 	file := File{
 		ReadWriteSeeker: f,
 		Name:            name,
@@ -164,9 +163,12 @@ func (f *File) IsImage() bool {
 }
 
 func (f *File) Parse(t *Template){
-	println("parsing")
 	content := f.Content()
-	o, err := t.Template.Parse(content)
+	o, err := t.Clone()
+	if err != nil {
+		f.Parsed = template.HTML(fmt.Sprintf("couldn't parse template %q: %w", f.Name, err))
+	}
+	o, err = o.Parse(content)
 	if err != nil {
 		f.Parsed = template.HTML(fmt.Sprintf("couldn't parse template %q: %w", f.Name, err))
 	}
