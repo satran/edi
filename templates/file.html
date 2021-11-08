@@ -42,7 +42,7 @@
 	<div class="file">
 	  <div class="title">{{ .Name }}</div>
 	  {{ if .IsText }}
-	  <div class="content text">{{ .Content }}</div>
+	  <div class="content text">{{ .Parsed |  }}</div>
 	  {{ else if .IsImage }}
 	  <div class="content image"><img src="/_raw/{{ .Name }}" /></div>
 	  {{ else }}

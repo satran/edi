@@ -1,15 +1,18 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"html/template"
 )
 
 type Store struct {
@@ -42,8 +45,8 @@ func (s *Store) Get(name string) (*File, error) {
 	}
 	meta, err := s.Meta(name)
 	if err != nil {
-		f.Close()
-		return nil, err
+		log.Printf("meta %q missing: %s", name, err)
+		//return nil, err
 	}
 	type_, err := fileContentType(f)
 	if err != nil {
@@ -130,6 +133,7 @@ type File struct {
 	Name  string
 	Type  string
 	Meta  Meta
+	Parsed template.HTML
 	path  string
 	close func() error
 }
@@ -157,6 +161,20 @@ func (f *File) IsImage() bool {
 		}
 	}
 	return false
+}
+
+func (f *File) Parse(t *Template){
+	println("parsing")
+	content := f.Content()
+	o, err := t.Template.Parse(content)
+	if err != nil {
+		f.Parsed = template.HTML(fmt.Sprintf("couldn't parse template %q: %w", f.Name, err))
+	}
+	wr := &bytes.Buffer{}
+	if err := o.Execute(wr, nil); err != nil {
+		f.Parsed = template.HTML(fmt.Sprintf("couldn't execute template %q: %w", f.Name, err))
+	}
+	f.Parsed = template.HTML(wr.String())
 }
 
 func (f *File) Content() string {
