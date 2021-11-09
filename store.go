@@ -42,6 +42,18 @@ type Config struct {
 	MenuFile  string `json:"menu-file"`
 }
 
+func (s *Store) List() ([]string, error) {
+	files, err := ioutil.ReadDir(filepath.Join(s.root, "objects"))
+	if err != nil {
+		return nil, fmt.Errorf("couldn't list directory: %w", err)
+	}
+	list := make([]string, 0, len(files))
+	for _, f := range files {
+		list = append(list, f.Name())
+	}
+	return list, nil
+}
+
 func (s *Store) Get(name string) (*File, error) {
 	f, err := os.OpenFile(s.path(name), os.O_CREATE|os.O_RDONLY, 0600)
 	if err != nil {
@@ -127,11 +139,30 @@ var imageMime = map[string]bool{
 }
 
 func (f *File) IsImage() bool {
-	return imageMime[f.Type]
+	for _, t := range []string{
+		"image/avif",
+		"image/gif",
+		"image/jpeg",
+		"image/jpeg",
+		"image/png",
+		"image/svg+xml",
+		"image/webp",
+	} {
+		if f.Type == t {
+			return true
+		}
+	}
+	return false
 }
 
-func (f *File) Parse() template.HTML {
-	t, err := f.parser.Clone()
+func (f *File) Parse(t *Template) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in f", r)
+		}
+	}()
+	content := f.Content()
+	o, err := t.Clone()
 	if err != nil {
 		return template.HTML(fmt.Sprintf("couldn't load parser %q: %w", f.Name, err))
 	}
