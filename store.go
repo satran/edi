@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"mime"
@@ -12,7 +14,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"html/template"
 )
 
 type Store struct {
@@ -89,8 +90,12 @@ func (s *Store) Meta(name string) (Meta, error) {
 }
 
 func (s *Store) Write(name string, r io.Reader, meta Meta) error {
+	var mode fs.FileMode = 0600
+	if strings.HasSuffix(name, ".sh") {
+		mode = 0700
+	}
 	path := s.path(name)
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, mode)
 	if err != nil {
 		return fmt.Errorf("creating file %q: %w", name, err)
 	}
@@ -129,12 +134,12 @@ func (s *Store) metaPath(name string) string {
 
 type File struct {
 	io.ReadWriteSeeker
-	Name  string
-	Type  string
-	Meta  Meta
+	Name   string
+	Type   string
+	Meta   Meta
 	Parsed template.HTML
-	path  string
-	close func() error
+	path   string
+	close  func() error
 }
 
 func (f *File) Close() error {
@@ -162,7 +167,7 @@ func (f *File) IsImage() bool {
 	return false
 }
 
-func (f *File) Parse(t *Template){
+func (f *File) Parse(t *Template) {
 	content := f.Content()
 	o, err := t.Clone()
 	if err != nil {
