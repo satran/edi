@@ -164,8 +164,9 @@ func FileWriteHandler(s *Store, path string) http.HandlerFunc {
 			if name == "" {
 				name = r.PostForm.Get("name")
 			}
+			// This causes scripts to act randomly. awk fails not understanding a \r
+			text = strings.ReplaceAll(text, "\r", "")
 			rdr = strings.NewReader(text)
-
 		} else {
 			file, meta, err := r.FormFile("file")
 			if err != nil {
