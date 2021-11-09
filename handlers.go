@@ -1,14 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
-	"encoding/json"
-	"path/filepath"
 )
 
 func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
@@ -130,13 +130,16 @@ func FileGetHandler(s *Store, tmpls *template.Template, parser *Template) http.H
 			return
 		}
 		defer f.Close()
-		f.Parse(parser)
-		if err := tmpls.ExecuteTemplate(w, "file.html", f); err != nil {
-			log.Printf("executing file template: %s", err)
-			writeError(w, http.StatusInternalServerError)
-			return
+		if f.Type == "text/plain" {
+			f.Parse(parser)
+			if err := tmpls.ExecuteTemplate(w, "file.html", f); err != nil {
+				log.Printf("executing file template: %s", err)
+				writeError(w, http.StatusInternalServerError)
+				return
+			}
+		} else {
+			http.ServeFile(w, r, s.path(name))
 		}
-		//http.ServeFile(w, r, s.path(name))
 	}
 }
 
@@ -191,7 +194,9 @@ func FileWriteHandler(s *Store, path string) http.HandlerFunc {
 
 func ShellHandler(s *Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var input struct {Cmd string `json:"cmd"`}
+		var input struct {
+			Cmd string `json:"cmd"`
+		}
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
