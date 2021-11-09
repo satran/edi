@@ -72,6 +72,7 @@ function dragOverHandler(ev) {
 	    .then(data => {
 		console.log('Success:', data);
 		output.innerHTML = data.output;
+		prompt.value = "";
 	    })
 	    .catch((error) => {
 		console.error('Error:', error);
