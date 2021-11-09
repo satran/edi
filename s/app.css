@@ -59,6 +59,10 @@ a {
 .label.right {
     text-align: right;
 }
+input {
+    border-radius: 0;
+}
+
 input.field.label {
     padding-top: 0;
 }
@@ -74,6 +78,7 @@ input.field {
 }
 input.title {
     font-weight: bold;
+    border-radius: 0;
 }
 input.field:focus {
     border-bottom: 1px solid red;
@@ -112,42 +117,6 @@ textarea.editor:focus{
     max-width: 100%;
 }
 
-@media (prefers-color-scheme: dark) {
-    body {
-        background: #000;
-        color: #ddd;
-    }
-    a {
-        color: #ddd;
-    }
-    #header {
-	background: #000;
-	border-bottom: 1px solid #555;
-    }
-    #header .item.right{
-	border-left: 1px solid #555;
-    }
-    input.field {
-	background: none;
-	color: #ddd;
-    }
-    textarea.editor {
-	background: #000;
-	color: #ddd;
-    }
-}
-@media print{
-    body{
-	max-width:none
-    }
-}
-@media screen and (max-width: 800px) {
-  .file {
-      padding: 1em;
-      margin: 0;
-  }
-}
-
 #shell-window {
     top: 0;
     bottom: 0;
@@ -164,18 +133,58 @@ textarea.editor:focus{
     width: 33em;
     height: calc(100% - 4em);
     z-index: 1000;
-    overflow: scroll;
+    overflow: scroll-y;
 }
 #shell-output {
     padding: 1em;
     white-space: pre-wrap;
 }
 #prompt {
-    width: 100%;
+    width: calc(100% - 2em);
     border: none;
     font-size: 100%;
-    padding: 1em;
-    border-top: 1px solid;
+    margin: 1em;
+    border-bottom: 1px solid;
     outline: none;
     background: none;
+    border-radius: 0;
+}
+@media (prefers-color-scheme: dark) {
+    body {
+        background: #000;
+        color: #ddd;
+    }
+    a {
+        color: #ddd;
+    }
+    #header {
+	background: #000;
+	border-bottom: 1px solid #555;
+    }
+    #header .item.right{
+	border-left: 1px solid #555;
+    }
+    input {
+	background: none;
+	color: #ddd;
+    }
+    textarea.editor {
+	background: #000;
+	color: #ddd;
+    }
+    #shell-window>div {
+	background: #000;
+	color: #ddd;
+    }
+}
+@media print{
+    body{
+	max-width:none
+    }
+}
+@media screen and (max-width: 800px) {
+  .file {
+      padding: 1em;
+      margin: 0;
+  }
 }
