@@ -147,3 +147,35 @@ textarea.editor:focus{
       margin: 0;
   }
 }
+
+#shell-window {
+    top: 0;
+    bottom: 0;
+    left: 0;
+}
+
+#shell-window>div {
+    padding: 0;
+    margin: .5em auto;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    position: fixed;
+    background: #fff;
+    width: 33em;
+    height: calc(100% - 4em);
+    z-index: 1000;
+    overflow: scroll;
+}
+#shell-output {
+    padding: 1em;
+    white-space: pre-wrap;
+}
+#prompt {
+    width: 100%;
+    border: none;
+    font-size: 100%;
+    padding: 1em;
+    border-top: 1px solid;
+    outline: none;
+    background: none;
+}

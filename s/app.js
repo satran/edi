@@ -45,3 +45,36 @@ function dragOverHandler(ev) {
     // Prevent default behavior (Prevent file from being opened)
     ev.preventDefault();
 }
+
+
+(function(){
+    const shellbtn = document.getElementById("shell-btn");
+    let w = document.querySelector("#shell-window");
+    w.hidden = true;
+    shellbtn.addEventListener('click', event => {
+	w.hidden = !w.hidden;
+    });
+
+    let prompt = document.querySelector("#prompt");
+    let output = document.querySelector("#shell-output");
+    prompt.addEventListener('keydown', ev => {
+	if (ev.keyCode !== 13) return;
+	
+	let cmd = {cmd: prompt.value};
+	fetch('_sh', {
+	    method: 'POST',
+	    headers: {
+		'Content-Type': 'application/json',
+	    },
+	    body: JSON.stringify(cmd),
+	})
+	    .then(response => response.json())
+	    .then(data => {
+		console.log('Success:', data);
+		output.innerHTML = data.output;
+	    })
+	    .catch((error) => {
+		console.error('Error:', error);
+	    });
+    });
+})();

@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"encoding/json"
+	"path/filepath"
 )
 
 func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
@@ -18,6 +20,7 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	edit := EditHandler(s, tmpls, "/edit/")
 	update := FileWriteHandler(s, "/edit/")
 	write := FileWriteHandler(s, "/_new")
+	shell := ShellHandler(s)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -34,13 +37,18 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 						http.StatusTemporaryRedirect)
 				}
 			}
+		case r.URL.Path == "/_sh":
+			switch r.Method {
+			case http.MethodPost:
+				shell(wr, r)
+			}
+
 		case r.URL.Path == "/_config":
 			switch r.Method {
 			case http.MethodGet:
 				config(wr, r)
-			case http.MethodPost:
-
 			}
+
 		case r.URL.Path == "/_new":
 			switch r.Method {
 			case http.MethodGet:
@@ -178,6 +186,25 @@ func FileWriteHandler(s *Store, path string) http.HandlerFunc {
 			return
 		}
 		http.Redirect(w, r, "/"+name, http.StatusSeeOther)
+	}
+}
+
+func ShellHandler(s *Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var input struct {Cmd string `json:"cmd"`}
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		out, err := run(filepath.Join(s.root, "objects"), input.Cmd)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if err := json.NewEncoder(w).Encode(map[string]interface{}{"output": out}); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 	}
 }
 
