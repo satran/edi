@@ -12,9 +12,8 @@ import (
 )
 
 func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
-	t := NewTemplate(s.root)
 	config := ConfigHandler(s, tmpls)
-	get := FileGetHandler(s, tmpls, t)
+	get := FileGetHandler(s, tmpls)
 	staticGet := FileStaticHandler(s, "/_raw/")
 	new_ := NewHandler(s, tmpls)
 	edit := EditHandler(s, tmpls, "/edit/")
@@ -117,7 +116,7 @@ func ConfigHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	}
 }
 
-func FileGetHandler(s *Store, tmpls *template.Template, parser *Template) http.HandlerFunc {
+func FileGetHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := strings.TrimLeft(r.URL.Path, "/")
 		if len(name) < 1 {
@@ -131,7 +130,6 @@ func FileGetHandler(s *Store, tmpls *template.Template, parser *Template) http.H
 		}
 		defer f.Close()
 		if f.Type == "text/plain" {
-			f.Parse(parser)
 			if err := tmpls.ExecuteTemplate(w, "file.html", f); err != nil {
 				log.Printf("executing file template: %s", err)
 				writeError(w, http.StatusInternalServerError)

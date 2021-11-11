@@ -18,6 +18,7 @@ import (
 type Store struct {
 	root   string
 	config *Config
+	parser *Parser
 }
 
 func NewStore(root string) (*Store, error) {
@@ -31,7 +32,9 @@ func NewStore(root string) (*Store, error) {
 	if err := json.NewDecoder(f).Decode(c); err != nil {
 		return nil, fmt.Errorf("decode settings file: %w", err)
 	}
-	return &Store{root: root, config: c}, nil
+	s := &Store{root: root, config: c}
+	s.parser = NewParser(s.objpath())
+	return s, nil
 }
 
 type Config struct {
@@ -54,11 +57,13 @@ func (s *Store) Get(name string) (*File, error) {
 		Type:            type_,
 		path:            s.path(name),
 		close:           f.Close,
+		parser:          s.parser,
 	}
 	if err := file.SeekStart(); err != nil {
 		file.Close()
 		return nil, err
 	}
+
 	return &file, err
 }
 
@@ -88,13 +93,18 @@ func (s *Store) path(name string) string {
 	return filepath.Join(s.root, "objects", name)
 }
 
+func (s *Store) objpath() string {
+	return filepath.Join(s.root, "objects")
+}
+
 type File struct {
 	io.ReadWriteSeeker
+	parser *Parser
 	Name   string
 	Type   string
-	Parsed template.HTML
-	path   string
-	close  func() error
+
+	path  string
+	close func() error
 }
 
 func (f *File) Close() error {
@@ -119,21 +129,20 @@ func (f *File) IsImage() bool {
 	return imageMime[f.Type]
 }
 
-func (f *File) Parse(t *Template) {
-	content := f.Content()
-	o, err := t.Clone()
+func (f *File) Parse() template.HTML {
+	t, err := f.parser.Clone()
 	if err != nil {
-		f.Parsed = template.HTML(fmt.Sprintf("couldn't parse template %q: %w", f.Name, err))
+		return template.HTML(fmt.Sprintf("couldn't load parser %q: %w", f.Name, err))
 	}
-	o, err = o.Parse(content)
+	t, err = t.Parse(f.Content())
 	if err != nil {
-		f.Parsed = template.HTML(fmt.Sprintf("couldn't parse template %q: %w", f.Name, err))
+		return template.HTML(fmt.Sprintf("couldn't parse template %q: %w", f.Name, err))
 	}
 	wr := &bytes.Buffer{}
-	if err := o.Execute(wr, nil); err != nil {
-		f.Parsed = template.HTML(fmt.Sprintf("couldn't execute template %q: %w", f.Name, err))
+	if err := t.Execute(wr, nil); err != nil {
+		return template.HTML(fmt.Sprintf("couldn't execute template %q: %w", f.Name, err))
 	}
-	f.Parsed = template.HTML(wr.String())
+	return template.HTML(wr.String())
 }
 
 func (f *File) Content() string {

@@ -4,45 +4,43 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"text/template"
 )
 
-type Template struct {
+type Parser struct {
 	root string
 	fns  template.FuncMap
 	*template.Template
 }
 
-func NewTemplate(dir string) *Template {
-	t := Template{root: dir}
-	t.fns = template.FuncMap{
+func NewParser(dir string) *Parser {
+	p := Parser{root: dir}
+	p.fns = template.FuncMap{
 		"title": strings.Title,
-		"link":  t.Link,
-		"sh":    t.Shell,
+		"link":  p.Link,
+		"sh":    p.Shell,
 	}
-	t.Template = template.New("engine").Funcs(t.fns).Delims("((", "))")
-	return &t
+	p.Template = template.New("engine").Funcs(p.fns).Delims("((", "))")
+	return &p
 }
 
-func (t *Template) Link(url string, args ...string) string {
+func (p *Parser) Link(url string, args ...string) string {
 	if len(args) >= 1 {
 		return fmt.Sprintf(`<a href=%q>%s</a>`, url, args[0])
 	}
 	return fmt.Sprintf(`<a href=%q>%s</a>`, url, url)
 }
 
-func (t *Template) Shell(args string) string {
-	objDir := filepath.Join(t.root, "objects")
+func (p *Parser) Shell(args string) string {
 	cmd := exec.Command("bash", "-c", args)
 	// todo: this is a simple hack to ensure the scripts in the
 	// object directory is in the PATH.
 	path := os.Getenv("PATH")
-	path += ":" + objDir
+	path += ":" + p.root
 	os.Setenv("PATH", path)
 	cmd.Env = append(os.Environ())
-	cmd.Dir = objDir
+	cmd.Dir = p.root
 	// do nothing as it just shows error code
 	//return err.Error()
 	out, _ := cmd.CombinedOutput()
