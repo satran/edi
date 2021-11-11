@@ -13,7 +13,7 @@ import (
 
 func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	config := ConfigHandler(s, tmpls)
-	get := FileGetHandler(s, tmpls, t)
+	get := FileGetHandler(s, tmpls)
 	list := ListHandler(s)
 	staticGet := FileStaticHandler(s, "/_raw/")
 	new_ := NewHandler(s, tmpls)
@@ -142,7 +142,7 @@ func ListHandler(s *Store) http.HandlerFunc {
 	}
 }
 
-func FileGetHandler(s *Store, tmpls *template.Template, parser *Template) http.HandlerFunc {
+func FileGetHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := strings.TrimLeft(r.URL.Path, "/")
 		if len(name) < 1 {

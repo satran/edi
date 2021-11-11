@@ -18,24 +18,24 @@ func NewParser(dir string) *Parser {
 	p := Parser{root: dir}
 	p.fns = template.FuncMap{
 		"title": strings.Title,
-		"link":  t.Link,
-		"l":     t.Link,
-		"i":     t.Image,
-		"image": t.Image,
-		"sh":    t.Shell,
+		"link":  p.Link,
+		"l":     p.Link,
+		"i":     p.Image,
+		"image": p.Image,
+		"sh":    p.Shell,
 	}
 	p.Template = template.New("engine").Funcs(p.fns).Delims("((", "))")
 	return &p
 }
 
-func (t *Template) Image(url string, args ...string) string {
+func (p *Parser) Image(url string, args ...string) string {
 	if len(args) >= 1 {
 		return fmt.Sprintf(`<img src=%q alt=%q />`, url, args[0])
 	}
 	return fmt.Sprintf(`<img src=%q />`, url)
 }
 
-func (t *Template) Link(url string, args ...string) string {
+func (p *Parser) Link(url string, args ...string) string {
 	if len(args) >= 1 {
 		return fmt.Sprintf(`<a href=%q>%s</a>`, url, args[0])
 	}
