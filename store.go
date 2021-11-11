@@ -39,6 +39,7 @@ func NewStore(root string) (*Store, error) {
 
 type Config struct {
 	StartFile string `json:"start-file"`
+	MenuFile  string `json:"menu-file"`
 }
 
 func (s *Store) Get(name string) (*File, error) {

@@ -117,13 +117,12 @@ textarea.editor:focus{
     max-width: 100%;
 }
 
-#shell-window {
+.window {
     top: 0;
     bottom: 0;
     left: 0;
 }
-
-#shell-window>div {
+.window>div {
     padding: 0;
     margin: .5em auto;
     border: 1px solid #ccc;
@@ -135,7 +134,8 @@ textarea.editor:focus{
     z-index: 1000;
     overflow: scroll-y;
 }
-#shell-output {
+
+#shell-output, #menu {
     padding: 1em;
     white-space: pre-wrap;
 }

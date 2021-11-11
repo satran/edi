@@ -20,6 +20,7 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	update := FileWriteHandler(s, "/edit/")
 	write := FileWriteHandler(s, "/_new")
 	shell := ShellHandler(s)
+	menu := MenuHandler(s, tmpls)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -36,6 +37,8 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 						http.StatusTemporaryRedirect)
 				}
 			}
+		case r.URL.Path == "/_menu":
+			menu(wr, r)
 		case r.URL.Path == "/_sh":
 			switch r.Method {
 			case http.MethodPost:
@@ -137,6 +140,22 @@ func FileGetHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
 			}
 		} else {
 			http.ServeFile(w, r, s.path(name))
+		}
+	}
+}
+
+func MenuHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		f, err := s.Get(s.config.MenuFile)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		defer f.Close()
+		if err := tmpls.ExecuteTemplate(w, "menu.html", f); err != nil {
+			log.Printf("executing file template: %s", err)
+			writeError(w, http.StatusInternalServerError)
+			return
 		}
 	}
 }
