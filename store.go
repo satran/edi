@@ -105,21 +105,18 @@ func (f *File) IsText() bool {
 	return strings.HasPrefix(f.Type, "text/plain")
 }
 
+var imageMime = map[string]bool{
+	"image/avif":    true,
+	"image/gif":     true,
+	"image/jpeg":    true,
+	"image/jpg":     true,
+	"image/png":     true,
+	"image/svg+xml": true,
+	"image/webp":    true,
+}
+
 func (f *File) IsImage() bool {
-	for _, t := range []string{
-		"image/avif",
-		"image/gif",
-		"image/jpeg",
-		"image/jpeg",
-		"image/png",
-		"image/svg+xml",
-		"image/webp",
-	} {
-		if f.Type == t {
-			return true
-		}
-	}
-	return false
+	return imageMime[f.Type]
 }
 
 func (f *File) Parse(t *Template) {
