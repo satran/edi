@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -23,9 +24,27 @@ func NewParser(dir string) *Parser {
 		"i":     p.Image,
 		"image": p.Image,
 		"sh":    p.Shell,
+		"parse": p.Parse,
 	}
 	p.Template = template.New("engine").Funcs(p.fns).Delims("((", "))")
 	return &p
+}
+
+func (p *Parser) Parse(content string) string {
+	t, err := p.Clone()
+	if err != nil {
+		return fmt.Sprintf("couldn't load parser: %w", err)
+	}
+	t, err = t.Parse(content)
+	if err != nil {
+		return fmt.Sprintf("couldn't parse template: %w", err)
+	}
+	wr := &bytes.Buffer{}
+	if err := t.Execute(wr, nil); err != nil {
+		return fmt.Sprintf("couldn't execute template: %w", err)
+	}
+	return wr.String()
+
 }
 
 func (p *Parser) Image(url string, args ...string) string {

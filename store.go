@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -139,42 +138,11 @@ var imageMime = map[string]bool{
 }
 
 func (f *File) IsImage() bool {
-	for _, t := range []string{
-		"image/avif",
-		"image/gif",
-		"image/jpeg",
-		"image/jpeg",
-		"image/png",
-		"image/svg+xml",
-		"image/webp",
-	} {
-		if f.Type == t {
-			return true
-		}
-	}
-	return false
+	return imageMime[f.Type]
 }
 
-func (f *File) Parse(t *Template) {
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Println("Recovered in f", r)
-		}
-	}()
-	content := f.Content()
-	o, err := t.Clone()
-	if err != nil {
-		return template.HTML(fmt.Sprintf("couldn't load parser %q: %w", f.Name, err))
-	}
-	t, err = t.Parse(f.Content())
-	if err != nil {
-		return template.HTML(fmt.Sprintf("couldn't parse template %q: %w", f.Name, err))
-	}
-	wr := &bytes.Buffer{}
-	if err := t.Execute(wr, nil); err != nil {
-		return template.HTML(fmt.Sprintf("couldn't execute template %q: %w", f.Name, err))
-	}
-	return template.HTML(wr.String())
+func (f *File) Parse() template.HTML {
+	return template.HTML(f.parser.Parse(f.Content()))
 }
 
 func (f *File) Content() string {
