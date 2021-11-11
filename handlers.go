@@ -184,7 +184,7 @@ func FileWriteHandler(s *Store, path string) http.HandlerFunc {
 			http.Error(w, "File not found", http.StatusNotFound)
 			return
 		}
-		if err := s.Write(name, rdr, nil); err != nil {
+		if err := s.Write(name, rdr); err != nil {
 			log.Printf("creating file: %s", err)
 			writeError(w, http.StatusBadRequest)
 			return

@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/fs"
 	"io/ioutil"
-	"log"
 	"mime"
 	"net/http"
 	"os"
@@ -44,11 +43,6 @@ func (s *Store) Get(name string) (*File, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open file %q: %w", name, err)
 	}
-	meta, err := s.Meta(name)
-	if err != nil {
-		log.Printf("meta %q missing: %s", name, err)
-		//return nil, err
-	}
 	type_, err := fileContentType(f)
 	if err != nil {
 		f.Close()
@@ -57,7 +51,6 @@ func (s *Store) Get(name string) (*File, error) {
 	file := File{
 		ReadWriteSeeker: f,
 		Name:            name,
-		Meta:            meta,
 		Type:            type_,
 		path:            s.path(name),
 		close:           f.Close,
@@ -69,27 +62,7 @@ func (s *Store) Get(name string) (*File, error) {
 	return &file, err
 }
 
-func (s *Store) Meta(name string) (Meta, error) {
-	raw, err := ioutil.ReadFile(s.metaPath(name))
-	if err != nil {
-		return nil, fmt.Errorf("reading meta file %q: %w", name, err)
-	}
-	lines := strings.Split(string(raw), "\n")
-	m := make(map[string]string)
-	for i, line := range lines {
-		if len(line) == 0 || strings.HasPrefix(line, "#") {
-			continue
-		}
-		chunks := strings.SplitN(line, ":", 2)
-		if len(chunks) != 2 {
-			return nil, fmt.Errorf("meta file %q corrupted on line %d: %s", name, i, line)
-		}
-		m[chunks[0]] = chunks[1]
-	}
-	return Meta(m), nil
-}
-
-func (s *Store) Write(name string, r io.Reader, meta Meta) error {
+func (s *Store) Write(name string, r io.Reader) error {
 	var mode fs.FileMode = 0600
 	if strings.HasSuffix(name, ".sh") {
 		mode = 0700
@@ -104,19 +77,6 @@ func (s *Store) Write(name string, r io.Reader, meta Meta) error {
 	if err != nil {
 		return fmt.Errorf("write file %q: %w", name, err)
 	}
-	return s.WriteMeta(name, meta)
-}
-
-func (s *Store) WriteMeta(name string, meta Meta) error {
-	path := s.metaPath(name)
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
-	if err != nil {
-		return fmt.Errorf("creating file %q: %w", name, err)
-	}
-	defer f.Close()
-	for key, value := range meta {
-		fmt.Fprintf(f, "%s:%s", key, value)
-	}
 	return nil
 }
 
@@ -128,15 +88,10 @@ func (s *Store) path(name string) string {
 	return filepath.Join(s.root, "objects", name)
 }
 
-func (s *Store) metaPath(name string) string {
-	return filepath.Join(s.root, "meta", name)
-}
-
 type File struct {
 	io.ReadWriteSeeker
 	Name   string
 	Type   string
-	Meta   Meta
 	Parsed template.HTML
 	path   string
 	close  func() error
@@ -199,8 +154,6 @@ func (f *File) SeekStart() error {
 	}
 	return nil
 }
-
-type Meta map[string]string
 
 func fileContentType(r io.ReadSeeker) (string, error) {
 	// Only the first 512 bytes are used to sniff the content type.
