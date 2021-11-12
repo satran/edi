@@ -132,6 +132,7 @@ textarea.editor:focus{
     z-index: 1000;
     overflow-y: auto;
     overflow-x: hidden;
+    line-height: 1.5;
 }
 
 #shell-output, #menu {
