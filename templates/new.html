@@ -49,10 +49,10 @@
 	    <input class="hidden" type="submit" value="Save" />
 	    {{if .Name }}
 	    <div><input class="field title" type="text" placeholder="Enter file name" name="name" value="{{.Name}}"/></div>
-	    <textarea autofocus class="editor" name="text" placeholder="Add your content here or drop a file..."  oninput="auto_grow(this)">{{.Content}}</textarea>
+	    <textarea autofocus id="editor" class="editor" name="text" placeholder="Add your content here or drop a file..."  oninput="auto_grow(this)">{{.Content}}</textarea>
 	    {{else}}
 	    <div><input class="field title" type="text" autofocus="autofocus" placeholder="Enter file name" name="name"/></div>
-	    <textarea class="editor" name="text" placeholder="Add your content here or drop a file..."  oninput="auto_grow(this)"></textarea>
+	    <textarea id="editor" class="editor" name="text" placeholder="Add your content here or drop a file..."  oninput="auto_grow(this)"></textarea>
 	    {{end}}
 	  </div>
 	</div>
@@ -65,11 +65,34 @@
 	  const savebtn = document.getElementById("save-btn");
 	  const form = document.getElementById("new-form");
 	  savebtn.addEventListener('click', event => {
+	      localStorage.removeItem(filename);
 	      form.submit();
 	  });
 
 	  auto_grow(document.querySelector(".editor"));
+
+
+	  // Save stuff to localstorage
+	  const editor = document.querySelector("#editor");
+
+	  let filename = document.location.pathname;
+	  let value = localStorage.getItem(filename);
+	  if (value && value.length > 0) {
+	    if (confirm('Load unsaved draft?')) {
+	      editor.value = value;
+	    }
+	  }
+
+	  let cancel;
+	  editor.addEventListener("keyup", event => {
+	      if (cancel) clearTimeout(cancel)
+	      cancel = setTimeout(() => {
+		    localStorage.setItem(filename, event.target.value)
+		  }, 1000)
+	  });
+
       })();
+
     </script>
   </body>
 </html>
