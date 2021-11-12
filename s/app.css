@@ -158,33 +158,33 @@ textarea.editor:focus{
         color: #ddd;
     }
     #header {
-	background: #000;
-	border-bottom: 1px solid #555;
+	      background: #000;
+	      border-bottom: 1px solid #555;
     }
     #header .item.right{
-	border-left: 1px solid #555;
+	      border-left: 1px solid #555;
     }
     input {
-	background: none;
-	color: #ddd;
+	      background: none;
+	      color: #ddd;
     }
     textarea.editor {
-	background: #000;
-	color: #ddd;
+	      background: #000;
+	      color: #ddd;
     }
-    #shell-window>div {
-	background: #000;
-	color: #ddd;
+    .window>div {
+	      background: #000;
+	      color: #ddd;
     }
 }
 @media print{
     body{
-	max-width:none
+	      max-width:none
     }
 }
 @media screen and (max-width: 800px) {
-  .file {
-      padding: 1em;
-      margin: 0;
-  }
+    .file {
+        padding: 1em;
+        margin: 0;
+    }
 }
