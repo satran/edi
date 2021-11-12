@@ -80,7 +80,7 @@ input.title {
     font-weight: bold;
     border-radius: 0;
 }
-input.field:focus {
+input.field:focus,#prompt:focus{
     border-bottom: 1px solid red;
 }
 textarea.editor {
@@ -125,14 +125,13 @@ textarea.editor:focus{
 .window>div {
     padding: 0;
     margin: .5em auto;
-    border: 1px solid #ccc;
-    border-radius: 3px;
     position: fixed;
-    background: #fff;
+    background: #efefef;
     width: 33em;
     height: calc(100% - 4em);
     z-index: 1000;
-    overflow: scroll-y;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 #shell-output, #menu {
@@ -144,7 +143,6 @@ textarea.editor:focus{
     border: none;
     font-size: 100%;
     margin: 1em;
-    border-bottom: 1px solid;
     outline: none;
     background: none;
     border-radius: 0;
@@ -173,7 +171,7 @@ textarea.editor:focus{
 	      color: #ddd;
     }
     .window>div {
-	      background: #000;
+	      background: #222;
 	      color: #ddd;
     }
 }
