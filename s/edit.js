@@ -102,12 +102,9 @@
             let bullet = looksLikeBullet(editor.value, editor.selectionStart);
             if (bullet) {
                 event.preventDefault();
-                let addition = editor.value.substring(editor.selectionStart);
-                editor.value = editor.value.substring(0, editor.selectionStart);
-                editor.value += "\n" + bullet.bullet + addition;
+                editor.insertText("\n" + bullet.bullet);
             }
         }
-        //auto_grow(editor);
 
 	      if (cancel) clearTimeout(cancel);
 	      cancel = setTimeout(() => {
