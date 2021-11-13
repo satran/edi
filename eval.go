@@ -5,7 +5,7 @@ import (
 	"os/exec"
 )
 
-func run(pwd string, cmd string) (string, error) {
+func run(pwd string, cmd string) string {
 	c := exec.Command("bash", "-c", cmd)
 	// todo: this is a simple hack to ensure the scripts in the
 	// object directory is in the PATH.
@@ -17,5 +17,5 @@ func run(pwd string, cmd string) (string, error) {
 	// ignore error as it mostly shows error code when something fails.
 	// I want to have what is written on the stderr
 	out, _ := c.CombinedOutput()
-	return string(out), nil
+	return string(out)
 }

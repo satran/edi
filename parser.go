@@ -3,8 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"os"
-	"os/exec"
 	"strings"
 	"text/template"
 )
@@ -33,18 +31,17 @@ func NewParser(dir string) *Parser {
 func (p *Parser) Parse(content string) string {
 	t, err := p.Clone()
 	if err != nil {
-		return fmt.Sprintf("couldn't load parser: %w", err)
+		return fmt.Sprintf("couldn't load parser: %s", err)
 	}
 	t, err = t.Parse(content)
 	if err != nil {
-		return fmt.Sprintf("couldn't parse template: %w", err)
+		return fmt.Sprintf("couldn't parse template: %s", err)
 	}
 	wr := &bytes.Buffer{}
 	if err := t.Execute(wr, nil); err != nil {
-		return fmt.Sprintf("couldn't execute template: %w", err)
+		return fmt.Sprintf("couldn't execute template: %s", err)
 	}
 	return wr.String()
-
 }
 
 func (p *Parser) Image(url string, args ...string) string {
@@ -62,16 +59,5 @@ func (p *Parser) Link(url string, args ...string) string {
 }
 
 func (p *Parser) Shell(args string) string {
-	cmd := exec.Command("bash", "-c", args)
-	// todo: this is a simple hack to ensure the scripts in the
-	// object directory is in the PATH.
-	path := os.Getenv("PATH")
-	path += ":" + p.root
-	os.Setenv("PATH", path)
-	cmd.Env = append(os.Environ())
-	cmd.Dir = p.root
-	// do nothing as it just shows error code
-	//return err.Error()
-	out, _ := cmd.CombinedOutput()
-	return string(out)
+	return run(p.root, args)
 }

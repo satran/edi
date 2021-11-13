@@ -242,11 +242,7 @@ func ShellHandler(s *Store) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		out, err := run(filepath.Join(s.root, "objects"), input.Cmd)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+		out := run(filepath.Join(s.root, "objects"), input.Cmd)
 		if err := json.NewEncoder(w).Encode(map[string]interface{}{"output": out}); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
