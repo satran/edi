@@ -67,7 +67,6 @@
     }
 
     function resize() {
-        editor.style.height = '5px';
         editor.style.height = (editor.scrollHeight) + 'px';
     }
 

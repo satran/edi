@@ -93,6 +93,7 @@ textarea.editor {
     overflow: hidden;
     background: none;
     margin-bottom: 80% !important;
+    box-sizing: border-box;
 }
 textarea.editor:focus{
     border-bottom: 1px solid red;
