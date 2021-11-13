@@ -1,5 +1,6 @@
 (function() {
     const editor = document.getElementById("editor");
+    const tabsize = 4;
     const keymap = {
         "<": { value: "<>", pos: 1 },
         "(": { value: "()", pos: 1 },
@@ -26,6 +27,17 @@
         "@l": '((link ""))'
     };
 	  const filename = document.location.pathname;
+
+    editor.moveCursor = function(i) {
+        const pos = editor.selectionStart;
+        editor.setSelectionRange(pos+i, pos+i);
+    };
+
+    editor.insertText = function(text) {
+        editor.focus();
+        const pos = editor.selectionStart;
+        editor.setRangeText(text, pos, pos, "end");
+    };
 
     function getWord(text, caretPos) {
         let preText = text.substring(0, caretPos);
@@ -64,12 +76,8 @@
         if (keymap[event.key]) {
             event.preventDefault();
             const pos = editor.selectionStart;
-            editor.value =
-                editor.value.slice(0, pos) +
-                keymap[event.key].value +
-                editor.value.slice(editor.selectionEnd);
-
-            editor.selectionStart = editor.selectionEnd = pos + keymap[event.key].pos;
+            editor.setRangeText(keymap[event.key].value);
+            editor.moveCursor(keymap[event.key].pos);
         }
 
         if (event.key === "Tab") {
@@ -86,13 +94,7 @@
                     pos + (snipmap[word].length - 1);
             } else {
                 event.preventDefault();
-                const pos = editor.selectionStart;
-                editor.value =
-                    editor.value.slice(0, pos) +
-                    " " +
-                    editor.value.slice(editor.selectionEnd);
-
-                editor.selectionStart = editor.selectionEnd = pos + 1;
+                editor.insertText(" ".repeat(tabsize));
             }
         }
 

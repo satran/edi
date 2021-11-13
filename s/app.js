@@ -21,7 +21,6 @@
 	      })
 	          .then(response => response.json())
 	          .then(data => {
-		            console.log('Success:', data);
 		            output.innerHTML = data.output;
 		            prompt.value = "";
 	          })
@@ -40,7 +39,6 @@
 	  fetch('/_menu', {method: 'GET'})
 	      .then(response => response.text())
 	      .then(data => {
-		        console.log('Success:', data);
 		        menuWindow.innerHTML = data;
 	      })
 	      .catch((error) => {
