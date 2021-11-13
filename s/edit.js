@@ -67,8 +67,8 @@
     }
 
     function resize() {
-        editor.style.height = 'auto';
-        editor.style.height = editor.scrollHeight + 'px';
+        editor.style.height = '5px';
+        editor.style.height = (editor.scrollHeight) + 'px';
     }
 
 	  let cancel;
@@ -107,7 +107,7 @@
                 editor.value += "\n" + bullet.bullet + addition;
             }
         }
-        resize();
+        //auto_grow(editor);
 
 	      if (cancel) clearTimeout(cancel);
 	      cancel = setTimeout(() => {
