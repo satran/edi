@@ -37,7 +37,7 @@ a {
     border-bottom: 1px solid #ccc;
 }
 #header>div{
-    max-width: 33em;;
+    max-width: 44em;
     margin: 0 auto;
 }
 #header .item {
@@ -51,7 +51,7 @@ a {
 .container {
     margin: 0 auto;
     margin-top: 3em;
-    max-width: 33em;
+    max-width: 44em;
     height: 100%;
     margin-bottom: 3rem;
 }
@@ -128,7 +128,7 @@ textarea.editor:focus{
     margin: .5em auto;
     position: fixed;
     background: #efefef;
-    width: 33em;
+    width: 44em;
     height: calc(100% - 4em);
     z-index: 1000;
     overflow-y: auto;
