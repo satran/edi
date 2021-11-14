@@ -13,7 +13,6 @@ import (
 
 func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	get := FileGetHandler(s, tmpls)
-	staticGet := FileStaticHandler(s, "/_raw/")
 	new_ := NewHandler(s, tmpls)
 	edit := EditHandler(s, tmpls, "/edit/")
 	update := FileWriteHandler(s, "/edit/")
@@ -26,17 +25,22 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 		wr := &ResponseWriter{ResponseWriter: w}
 		switch {
 		case r.URL.Path == "/":
-			switch r.Method {
-			case http.MethodGet:
-				http.Redirect(w, r, "/"+s.Index(), http.StatusTemporaryRedirect)
+			if shouldReject(w, r, http.MethodGet) {
+				return
 			}
+			http.Redirect(w, r, "/"+s.Index(), http.StatusTemporaryRedirect)
+
 		case r.URL.Path == "/_menu":
-			menu(wr, r)
-		case r.URL.Path == "/_sh":
-			switch r.Method {
-			case http.MethodPost:
-				shell(wr, r)
+			if shouldReject(w, r, http.MethodGet) {
+				return
 			}
+			menu(wr, r)
+
+		case r.URL.Path == "/_sh":
+			if shouldReject(w, r, http.MethodPost) {
+				return
+			}
+			shell(wr, r)
 
 		case r.URL.Path == "/_new":
 			switch r.Method {
@@ -45,11 +49,7 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 			case http.MethodPost:
 				write(wr, r)
 			}
-		case strings.HasPrefix(r.URL.Path, "/_raw"):
-			switch r.Method {
-			case http.MethodGet:
-				staticGet(wr, r)
-			}
+
 		case strings.HasPrefix(r.URL.Path, "/edit"):
 			switch r.Method {
 			case http.MethodGet:
@@ -137,13 +137,6 @@ func MenuHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	}
 }
 
-func FileStaticHandler(s *Store, path string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		name := r.URL.Path[len(path):]
-		http.ServeFile(w, r, s.path(name))
-	}
-}
-
 func FileWriteHandler(s *Store, path string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseMultipartForm(10 << 20); err != nil { //10 MB
@@ -204,13 +197,16 @@ func ShellHandler(s *Store) http.HandlerFunc {
 	}
 }
 
-func nameFromPath(r *http.Request) string {
-	return strings.TrimLeft(r.URL.Path, "/")
+func shouldReject(w http.ResponseWriter, r *http.Request, method string) bool {
+	if r.Method == method {
+		return false
+	}
+	writeError(w, http.StatusMethodNotAllowed)
+	return true
 }
 
 func writeError(w http.ResponseWriter, status int) {
-	w.WriteHeader(status)
-	w.Write([]byte(http.StatusText(status)))
+	http.Error(w, http.StatusText(status), status)
 }
 
 // ResponseWriter is a wrapper for http.ResponseWriter to get the written http status code
