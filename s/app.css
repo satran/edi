@@ -12,14 +12,8 @@ a {
     color: #333;
 }
 
-.hidden {
-    display: none;
-}
 .btn {
     pointer: cursor;
-}
-.spacer {
-    padding: 1em;
 }
 .label {
     font-size: .8em;
@@ -55,18 +49,16 @@ a {
     height: 100%;
     margin-bottom: 3rem;
 }
-
 .label.right {
     text-align: right;
 }
+
 input {
     border-radius: 0;
 }
-
 input.field.label {
     padding-top: 0;
 }
-
 input.field {
     width: 100%;
     border: none;
@@ -83,6 +75,7 @@ input.title {
 input.field:focus,#prompt:focus{
     border-bottom: 1px solid red;
 }
+
 textarea.editor {
     outline: none;
     width: 100%;
@@ -118,25 +111,7 @@ textarea.editor:focus{
     max-width: 100%;
 }
 
-.window {
-    top: 0;
-    bottom: 0;
-    left: 0;
-}
-.window>div {
-    padding: 0;
-    margin: .5em auto;
-    position: fixed;
-    background: #efefef;
-    width: 44em;
-    height: calc(100% - 4em);
-    z-index: 1000;
-    overflow-y: auto;
-    overflow-x: hidden;
-    line-height: 1.5;
-}
-
-#shell-output, #menu {
+#shell-output{
     padding: 1em;
     white-space: pre-wrap;
 }
@@ -170,10 +145,6 @@ textarea.editor:focus{
     }
     textarea.editor {
 	      background: #000;
-	      color: #ddd;
-    }
-    .window>div {
-	      background: #222;
 	      color: #ddd;
     }
 }
