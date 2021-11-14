@@ -17,8 +17,7 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	edit := EditHandler(s, tmpls, "/edit/")
 	update := FileWriteHandler(s, "/edit/")
 	write := FileWriteHandler(s, "/_new")
-	shell := ShellHandler(s)
-	menu := MenuHandler(s, tmpls)
+	shell := ShellHandler(s, tmpls)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -30,16 +29,7 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 			}
 			http.Redirect(w, r, "/"+s.Index(), http.StatusTemporaryRedirect)
 
-		case r.URL.Path == "/_menu":
-			if shouldReject(w, r, http.MethodGet) {
-				return
-			}
-			menu(wr, r)
-
 		case r.URL.Path == "/_sh":
-			if shouldReject(w, r, http.MethodPost) {
-				return
-			}
 			shell(wr, r)
 
 		case r.URL.Path == "/_new":
@@ -121,22 +111,6 @@ func FileGetHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	}
 }
 
-func MenuHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		f, err := s.Get(s.config.MenuFile)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
-		}
-		defer f.Close()
-		if err := tmpls.ExecuteTemplate(w, "menu.html", f); err != nil {
-			log.Printf("executing file template: %s", err)
-			writeError(w, http.StatusInternalServerError)
-			return
-		}
-	}
-}
-
 func FileWriteHandler(s *Store, path string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseMultipartForm(10 << 20); err != nil { //10 MB
@@ -180,8 +154,19 @@ func FileWriteHandler(s *Store, path string) http.HandlerFunc {
 	}
 }
 
-func ShellHandler(s *Store) http.HandlerFunc {
+func ShellHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			if err := tmpls.ExecuteTemplate(w, "shell.html", nil); err != nil {
+				log.Printf("executing shell template: %s", err)
+				writeError(w, http.StatusInternalServerError)
+				return
+			}
+			return
+		}
+		if r.Method != http.MethodPost {
+			writeError(w, http.StatusMethodNotAllowed)
+		}
 		var input struct {
 			Cmd string `json:"cmd"`
 		}
