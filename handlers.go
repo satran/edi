@@ -12,7 +12,6 @@ import (
 )
 
 func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
-	config := ConfigHandler(s, tmpls)
 	get := FileGetHandler(s, tmpls)
 	list := ListHandler(s)
 	staticGet := FileStaticHandler(s, "/_raw/")
@@ -30,13 +29,8 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 		case r.URL.Path == "/":
 			switch r.Method {
 			case http.MethodGet:
-				if s.Index() == "" {
-					http.Redirect(w, r, "/_config",
-						http.StatusTemporaryRedirect)
-				} else {
-					http.Redirect(w, r, "/"+s.Index(),
-						http.StatusTemporaryRedirect)
-				}
+				http.Redirect(w, r, "/"+s.Index(),
+					http.StatusTemporaryRedirect)
 			}
 		case r.URL.Path == "/_menu":
 			menu(wr, r)
@@ -44,12 +38,6 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 			switch r.Method {
 			case http.MethodPost:
 				shell(wr, r)
-			}
-
-		case r.URL.Path == "/_config":
-			switch r.Method {
-			case http.MethodGet:
-				config(wr, r)
 			}
 
 		case r.URL.Path == "/_list":
@@ -109,16 +97,6 @@ func EditHandler(s *Store, tmpls *template.Template, path string) http.HandlerFu
 			return
 		}
 		if err := tmpls.ExecuteTemplate(w, "new.html", file); err != nil {
-			log.Printf("executing list template: %s", err)
-			writeError(w, http.StatusInternalServerError)
-			return
-		}
-	}
-}
-
-func ConfigHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := tmpls.ExecuteTemplate(w, "config.html", s.config); err != nil {
 			log.Printf("executing list template: %s", err)
 			writeError(w, http.StatusInternalServerError)
 			return
