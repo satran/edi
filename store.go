@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"io"
 	"io/fs"
 	"io/ioutil"
@@ -52,19 +51,31 @@ func (s *Store) Get(name string) (*File, error) {
 		return nil, err
 	}
 	file := File{
-		ReadWriteSeeker: f,
-		Name:            name,
-		Type:            type_,
-		path:            s.path(name),
-		close:           f.Close,
-		parser:          s.parser,
+		ReadWriteSeekCloser: f,
+		Name:                name,
+		Type:                type_,
+		path:                s.path(name),
+		parser:              s.parser,
 	}
+	// To ensure that further reads don't start at the wrong offset
 	if err := file.SeekStart(); err != nil {
 		file.Close()
 		return nil, err
 	}
-
 	return &file, err
+}
+
+func fileContentType(r io.ReadSeeker) (string, error) {
+	// Only the first 512 bytes are used to sniff the content type.
+	raw, err := ioutil.ReadAll(&(io.LimitedReader{R: r, N: 512}))
+	if err != nil {
+		return "", err
+	}
+	fileType, _, err := mime.ParseMediaType(http.DetectContentType(raw))
+	if err != nil {
+		return "", err
+	}
+	return fileType, nil
 }
 
 func (s *Store) Write(name string, r io.Reader) error {
@@ -95,69 +106,4 @@ func (s *Store) path(name string) string {
 
 func (s *Store) objpath() string {
 	return filepath.Join(s.root, "objects")
-}
-
-type File struct {
-	io.ReadWriteSeeker
-	parser *Parser
-	Name   string
-	Type   string
-
-	path  string
-	close func() error
-}
-
-func (f *File) Close() error {
-	return f.close()
-}
-
-func (f *File) IsText() bool {
-	return strings.HasPrefix(f.Type, "text/plain")
-}
-
-var imageMime = map[string]bool{
-	"image/avif":    true,
-	"image/gif":     true,
-	"image/jpeg":    true,
-	"image/jpg":     true,
-	"image/png":     true,
-	"image/svg+xml": true,
-	"image/webp":    true,
-}
-
-func (f *File) IsImage() bool {
-	return imageMime[f.Type]
-}
-
-func (f *File) Parse() template.HTML {
-	return template.HTML(f.parser.Parse(f.Content()))
-}
-
-func (f *File) Content() string {
-	content, err := ioutil.ReadAll(f)
-	if err != nil {
-		// for now return the parser error as content
-		return err.Error()
-	}
-	return string(content)
-}
-
-func (f *File) SeekStart() error {
-	if _, err := f.Seek(0, io.SeekStart); err != nil {
-		return fmt.Errorf("error seeking to begin: %w", err)
-	}
-	return nil
-}
-
-func fileContentType(r io.ReadSeeker) (string, error) {
-	// Only the first 512 bytes are used to sniff the content type.
-	raw, err := ioutil.ReadAll(&(io.LimitedReader{R: r, N: 512}))
-	if err != nil {
-		return "", err
-	}
-	fileType, _, err := mime.ParseMediaType(http.DetectContentType(raw))
-	if err != nil {
-		return "", err
-	}
-	return fileType, nil
 }
