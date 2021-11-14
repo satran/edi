@@ -13,7 +13,6 @@ import (
 
 func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	get := FileGetHandler(s, tmpls)
-	list := ListHandler(s)
 	staticGet := FileStaticHandler(s, "/_raw/")
 	new_ := NewHandler(s, tmpls)
 	edit := EditHandler(s, tmpls, "/edit/")
@@ -29,8 +28,7 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 		case r.URL.Path == "/":
 			switch r.Method {
 			case http.MethodGet:
-				http.Redirect(w, r, "/"+s.Index(),
-					http.StatusTemporaryRedirect)
+				http.Redirect(w, r, "/"+s.Index(), http.StatusTemporaryRedirect)
 			}
 		case r.URL.Path == "/_menu":
 			menu(wr, r)
@@ -38,12 +36,6 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 			switch r.Method {
 			case http.MethodPost:
 				shell(wr, r)
-			}
-
-		case r.URL.Path == "/_list":
-			switch r.Method {
-			case http.MethodGet:
-				list(wr, r)
 			}
 
 		case r.URL.Path == "/_new":
@@ -99,22 +91,6 @@ func EditHandler(s *Store, tmpls *template.Template, path string) http.HandlerFu
 		if err := tmpls.ExecuteTemplate(w, "new.html", file); err != nil {
 			log.Printf("executing list template: %s", err)
 			writeError(w, http.StatusInternalServerError)
-			return
-		}
-	}
-}
-
-func ListHandler(s *Store) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		list, err := s.List()
-		if err != nil {
-			log.Printf("executing list: %s", err)
-			writeError(w, http.StatusInternalServerError)
-			return
-		}
-		err = json.NewEncoder(w).Encode(map[string]interface{}{"files": list})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}

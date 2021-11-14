@@ -41,18 +41,6 @@ type Config struct {
 	MenuFile  string `json:"menu-file"`
 }
 
-func (s *Store) List() ([]string, error) {
-	files, err := ioutil.ReadDir(filepath.Join(s.root, "objects"))
-	if err != nil {
-		return nil, fmt.Errorf("couldn't list directory: %w", err)
-	}
-	list := make([]string, 0, len(files))
-	for _, f := range files {
-		list = append(list, f.Name())
-	}
-	return list, nil
-}
-
 func (s *Store) Get(name string) (*File, error) {
 	f, err := os.OpenFile(s.path(name), os.O_CREATE|os.O_RDONLY, 0600)
 	if err != nil {
