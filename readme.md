@@ -19,7 +19,7 @@ dabba -addr "localhost:8080" -dir ~/docs
 ```
 
 ## Template engine
-It uses a template engine derived from Go's template package. Unlike the default parser it uses (("(( ))")). There are a few builtin functions.
+It uses a template engine derived from Go's template package. Unlike the default parser it uses `(( ))`. There are a few builtin functions.
 
 - link | l - creates a link
 ```
@@ -39,4 +39,11 @@ generates
 ```
 ((sh `grep -ri '- \[ \]' .`))
 Finds all the "todos" in your files.
+```
+
+- parse - parses the output recursively
+```
+((sh `echo "((l "hello"))` | parse))
+generates
+<a href="hello">hello</a>
 ```
