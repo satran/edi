@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -14,30 +13,15 @@ import (
 )
 
 type Store struct {
-	root   string
-	config *Config
-	parser *Parser
+	root      string
+	parser    *Parser
+	startFile string
 }
 
-func NewStore(root string) (*Store, error) {
-	// Create the file if it doesn't exist
-	f, err := os.OpenFile(filepath.Join(root, "config.json"), os.O_CREATE|os.O_RDWR, 0600)
-	if err != nil {
-		return nil, fmt.Errorf("can't open settings file: %w", err)
-	}
-	defer f.Close()
-	c := &Config{}
-	if err := json.NewDecoder(f).Decode(c); err != nil {
-		return nil, fmt.Errorf("decode settings file: %w", err)
-	}
-	s := &Store{root: root, config: c}
+func NewStore(root string, start string) *Store {
+	s := &Store{root: root, startFile: start}
 	s.parser = NewParser(s.objpath())
-	return s, nil
-}
-
-type Config struct {
-	StartFile string `json:"start-file"`
-	MenuFile  string `json:"menu-file"`
+	return s
 }
 
 func (s *Store) Get(name string) (*File, error) {
@@ -97,7 +81,7 @@ func (s *Store) Write(name string, r io.Reader) error {
 }
 
 func (s *Store) Index() string {
-	return s.config.StartFile
+	return s.startFile
 }
 
 func (s *Store) path(name string) string {

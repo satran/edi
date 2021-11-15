@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/json"
 	"html/template"
 	"io"
@@ -89,8 +91,8 @@ func EditHandler(s *Store, tmpls *template.Template, path string) http.HandlerFu
 func FileGetHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := strings.TrimLeft(r.URL.Path, "/")
-		if len(name) < 1 {
-			http.Error(w, "File not found", http.StatusNotFound)
+		if name == "" {
+			writeError(w, http.StatusNotFound)
 			return
 		}
 		f, err := s.Get(name)
@@ -180,6 +182,30 @@ func ShellHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func basicAuth(next http.Handler, username string, password string) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reqUsername, reqPassword, ok := r.BasicAuth()
+		if !ok {
+			w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		}
+
+		usernameHash := sha256.Sum256([]byte(reqUsername))
+		passwordHash := sha256.Sum256([]byte(reqPassword))
+		expectedUsernameHash := sha256.Sum256([]byte(username))
+		expectedPasswordHash := sha256.Sum256([]byte(password))
+
+		// ConstantTimeCompare is use to avoid leaking information using timing attacks
+		usernameMatch := (subtle.ConstantTimeCompare(usernameHash[:], expectedUsernameHash[:]) == 1)
+		passwordMatch := (subtle.ConstantTimeCompare(passwordHash[:], expectedPasswordHash[:]) == 1)
+		if usernameMatch && passwordMatch {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+	})
 }
 
 func shouldReject(w http.ResponseWriter, r *http.Request, method string) bool {
