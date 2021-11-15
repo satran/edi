@@ -127,6 +127,17 @@ textarea.editor:focus{
     background: none;
     border-radius: 0;
 }
+#file-list {
+    padding: 1em;
+}
+#file-list a {
+    display: block;
+    padding: .5em;
+    text-decoration: none;
+}
+#file-list a:hover {
+    border-bottom: 1px solid;
+}
 @media (prefers-color-scheme: dark) {
     body {
         background: #000;

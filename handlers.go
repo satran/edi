@@ -16,6 +16,7 @@ import (
 func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	get := FileGetHandler(s, tmpls)
 	new_ := NewHandler(s, tmpls)
+	open := OpenFileHandler(s, tmpls)
 	edit := EditHandler(s, tmpls, "/edit/")
 	update := FileWriteHandler(s, "/edit/")
 	write := FileWriteHandler(s, "/_new")
@@ -40,6 +41,12 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 				new_(wr, r)
 			case http.MethodPost:
 				write(wr, r)
+			}
+
+		case r.URL.Path == "/_open":
+			switch r.Method {
+			case http.MethodGet:
+				open(wr, r)
 			}
 
 		case strings.HasPrefix(r.URL.Path, "/edit"):
@@ -153,6 +160,30 @@ func FileWriteHandler(s *Store, path string) http.HandlerFunc {
 			return
 		}
 		http.Redirect(w, r, "/"+name, http.StatusSeeOther)
+	}
+}
+
+func OpenFileHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		files, err := s.List()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		raw, err := json.Marshal(&files)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if err := tmpls.ExecuteTemplate(w, "open.html", map[string]interface{}{
+			"Files": template.JS(raw),
+		}); err != nil {
+			log.Printf("executing shell template: %s", err)
+			writeError(w, http.StatusInternalServerError)
+			return
+		}
+		return
+
 	}
 }
 

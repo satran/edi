@@ -24,6 +24,18 @@ func NewStore(root string, start string) *Store {
 	return s
 }
 
+func (s *Store) List() ([]string, error) {
+	files, err := ioutil.ReadDir(s.objpath())
+	if err != nil {
+		return nil, fmt.Errorf("couldn't list directory: %w", err)
+	}
+	names := make([]string, 0, len(files))
+	for _, f := range files {
+		names = append(names, f.Name())
+	}
+	return names, nil
+}
+
 func (s *Store) Get(name string) (*File, error) {
 	f, err := os.OpenFile(s.path(name), os.O_CREATE|os.O_RDONLY, 0600)
 	if err != nil {
