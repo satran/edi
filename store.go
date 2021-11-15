@@ -38,7 +38,6 @@ func (s *Store) Get(name string) (*File, error) {
 		ReadWriteSeekCloser: f,
 		Name:                name,
 		Type:                type_,
-		path:                s.path(name),
 		parser:              s.parser,
 	}
 	// To ensure that further reads don't start at the wrong offset

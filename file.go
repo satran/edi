@@ -21,8 +21,6 @@ type File struct {
 	parser *Parser
 	Name   string
 	Type   string
-
-	path string
 }
 
 func (f *File) IsText() bool {
