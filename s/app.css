@@ -75,6 +75,9 @@ input.title {
 input.field:focus,#prompt:focus{
     border-bottom: 1px solid red;
 }
+input.hidden {
+    display: none;
+}
 
 textarea.editor {
     outline: none;
