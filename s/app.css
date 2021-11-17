@@ -8,6 +8,9 @@ body {
 body, textarea, input {
     font-family: "SF Mono", "Inconsolata", "Segoe UI Mono", ui-monospace, Menlo, Monaco, "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
 }
+.highlight {
+    border: 5px dashed #ccc;
+}
 a {
     color: #333;
 }
