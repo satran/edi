@@ -14,13 +14,11 @@ import (
 
 type Store struct {
 	root      string
-	parser    *Parser
 	startFile string
 }
 
 func NewStore(root string, start string) *Store {
 	s := &Store{root: root, startFile: start}
-	s.parser = NewParser(s.objpath())
 	return s
 }
 
@@ -50,7 +48,7 @@ func (s *Store) Get(name string) (*File, error) {
 		ReadWriteSeekCloser: f,
 		Name:                name,
 		Type:                type_,
-		parser:              s.parser,
+		parser:              NewParser(s.objpath(), name),
 	}
 	// To ensure that further reads don't start at the wrong offset
 	if err := file.SeekStart(); err != nil {

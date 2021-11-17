@@ -10,11 +10,12 @@ import (
 type Parser struct {
 	root string
 	fns  template.FuncMap
+	filename string
 	*template.Template
 }
 
-func NewParser(dir string) *Parser {
-	p := Parser{root: dir}
+func NewParser(dir string, name string) *Parser {
+	p := Parser{root: dir, filename: name}
 	p.fns = template.FuncMap{
 		"title": strings.Title,
 		"link":  p.Link,
@@ -59,5 +60,5 @@ func (p *Parser) Link(url string, args ...string) string {
 }
 
 func (p *Parser) Shell(args string) string {
-	return run(p.root, args)
+	return run(p.root,p.filename, args)
 }
