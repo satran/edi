@@ -8,6 +8,13 @@ body {
 body, textarea, input {
     font-family: "SF Mono", "Inconsolata", "Segoe UI Mono", ui-monospace, Menlo, Monaco, "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
 }
+h1, h2, h3, h4, h5, h6 {
+    font-weight: bold;
+    font-size: 100%;
+}
+h1 {
+    border-bottom: 1px solid;
+}
 .highlight {
     border: 5px dashed #ccc;
 }
@@ -108,7 +115,7 @@ textarea.editor:focus{
     padding: 1em 0;
 }
 .file .content{
-    white-space: pre-wrap;
+    /*white-space: pre-wrap;*/
 }
 .file .content.image {
     text-align: center;

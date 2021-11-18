@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"text/template"
+	 blackfriday "github.com/russross/blackfriday/v2"
 )
 
 type Parser struct {
@@ -42,7 +43,7 @@ func (p *Parser) Parse(content string) string {
 	if err := t.Execute(wr, nil); err != nil {
 		return fmt.Sprintf("couldn't execute template: %s", err)
 	}
-	return wr.String()
+	return string(blackfriday.Run(wr.Bytes()))
 }
 
 func (p *Parser) Image(url string, args ...string) string {
