@@ -43,7 +43,14 @@ func (p *Parser) Parse(content string) string {
 	if err := t.Execute(wr, nil); err != nil {
 		return fmt.Sprintf("couldn't execute template: %s", err)
 	}
-	return string(blackfriday.Run(wr.Bytes()))
+	return string(
+		blackfriday.Run(wr.Bytes(), blackfriday.WithExtensions(
+			blackfriday.NoIntraEmphasis |
+				blackfriday.CommonExtensions |
+				blackfriday.HeadingIDs |
+				blackfriday.Footnotes |
+				blackfriday.NoEmptyLineBeforeBlock |
+				blackfriday.AutoHeadingIDs)))
 }
 
 func (p *Parser) Image(url string, args ...string) string {
