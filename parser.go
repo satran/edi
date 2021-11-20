@@ -2,21 +2,18 @@ package main
 
 import (
 	"bytes"
-	"fmt"
-	"text/template"
+	"regexp"
 
 	bf "github.com/russross/blackfriday/v2"
 )
 
 type Parser struct {
 	root     string
-	fns      template.FuncMap
 	filename string
 }
 
 func NewParser(dir string, name string) *Parser {
-	p := Parser{root: dir, filename: name}
-	return &p
+	return &Parser{root: dir, filename: name}
 }
 
 func (p *Parser) Parse(content string) string {
@@ -28,6 +25,7 @@ func (p *Parser) Parse(content string) string {
 	ast := m.Parse([]byte(content))
 	var buf bytes.Buffer
 	renderer := bf.NewHTMLRenderer(bf.HTMLRendererParameters{})
+	listDepth := 0
 	ast.Walk(func(node *bf.Node, entering bool) bf.WalkStatus {
 		var matched bool
 		switch node.Type {
@@ -46,6 +44,21 @@ func (p *Parser) Parse(content string) string {
 				buf.WriteString(runstdin(p.root, p.filename, node.Literal))
 				matched = true
 			}
+		case bf.List:
+			if entering {
+				listDepth++
+			} else {
+				listDepth--
+			}
+		case bf.Text:
+			if listDepth == 0 {
+				break
+			}
+			if isTask(node.Literal) {
+				matched = true
+				buf.Write(toTask(node.Literal, []byte(`<span class="task">$1</span>&nbsp;`)))
+			}
+
 		}
 		if !matched {
 			renderer.RenderNode(&buf, node, entering)
@@ -59,20 +72,8 @@ func shouldEval(content []byte) bool {
 	return bytes.HasPrefix(content, []byte("!"))
 }
 
-func (p *Parser) Image(url string, args ...string) string {
-	if len(args) >= 1 {
-		return fmt.Sprintf(`<img src=%q alt=%q />`, url, args[0])
-	}
-	return fmt.Sprintf(`<img src=%q />`, url)
-}
-
-func (p *Parser) Link(url string, args ...string) string {
-	if len(args) >= 1 {
-		return fmt.Sprintf(`<a href=%q>%s</a>`, url, args[0])
-	}
-	return fmt.Sprintf(`<a href=%q>%s</a>`, url, url)
-}
-
-func (p *Parser) Shell(args string) string {
-	return run(p.root, p.filename, args)
-}
+var (
+	taskR  = regexp.MustCompile(`^\[([ a-zA-Z\?/]*)\] `)
+	isTask = taskR.Match
+	toTask = taskR.ReplaceAll
+)
