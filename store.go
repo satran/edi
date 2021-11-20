@@ -94,9 +94,9 @@ func (s *Store) Index() string {
 }
 
 func (s *Store) path(name string) string {
-	return filepath.Join(s.root, "objects", name)
+	return filepath.Join(s.root, name)
 }
 
 func (s *Store) objpath() string {
-	return filepath.Join(s.root, "objects")
+	return s.root
 }
