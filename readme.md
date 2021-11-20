@@ -18,32 +18,30 @@ If you have the executable in the PATH directory you can start the server by
 dabba -addr "localhost:8080" -dir ~/docs 
 ```
 
-## Template engine
-It uses a template engine derived from Go's template package. Unlike the default parser it uses `(( ))`. There are a few builtin functions.
+## Markdown
+Dabba parses markdown with a few special tricks. 
 
-- link | l - creates a link
-```
-((link "https://satran.in" "My Blog"))
-generates
-<a href="https://satran.in">My Blog</a>
-```
+- All tasks are rendered a bit more nicely. 
+  So a `- [ ]` shows up as a block. A `- [s]` is also rendered. This is useful if you would like to make stages of your tasks.
 
-- image | i - embed an image
-```
-((image "hello.png" "Caption"))
-generates
-<img src="hello.png" alt="Caption" />
-```
+- Code blocks can be evaluated.
+  When you define an inline code block using
 
-- sh | runs a shell script in the dabba directory 
-```
-((sh `grep -ri '- \[ \]' .`))
-Finds all the "todos" in your files.
-```
+    `!echo "hello world"`
 
-- parse - parses the output recursively
-```
-((sh `echo "((l "hello"))` | parse))
-generates
-<a href="hello">hello</a>
-```
+  It runs the command `echo "hello world"` in a shell.
+  
+  Simarly a code fence 
+
+    ```!
+    var="a variable"
+    echo $var
+    ```
+
+  will also be evaluated in a shell. The output of both will not be parsed further and thus you can have these generating HTML.
+
+- Internal links can be type using `(())`
+  So `((Dabba Start))` will generate `<a href="Dabba Start">Dabba Start</a>`.
+
+
+
