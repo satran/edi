@@ -1,12 +1,23 @@
 package main
 
 import (
+	"bytes"
 	"os"
 	"os/exec"
 )
 
 func run(pwd string, filename string, cmd string) string {
 	c := exec.Command("bash", "-c", cmd)
+	return runCommand(c, pwd, filename)
+}
+
+func runstdin(pwd string, filename string, stdin []byte) string {
+	c := exec.Command("bash")
+	c.Stdin = bytes.NewReader(stdin)
+	return runCommand(c, pwd, filename)
+}
+
+func runCommand(c *exec.Cmd, pwd string, filename string) string {
 	// todo: this is a simple hack to ensure the scripts in the
 	// object directory is in the PATH.
 	path := os.Getenv("PATH")
