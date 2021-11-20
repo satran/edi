@@ -146,7 +146,7 @@
             formdata.append("file", file);
             fetch("/_new", {method: "POST", body: formdata})
                 .then(data => {
-                    editor.insertText('((image "'+ file.name +'"))');
+                    editor.insertText('!['+file.name+']('+ file.name +')');
                 })
                 .catch((error) => {
                     console.log("err:", error);
