@@ -55,3 +55,42 @@ func TestParse(t *testing.T) {
 		}
 	}
 }
+
+func TestParseInternalLinks(t *testing.T) {
+	tests := []struct {
+		Name string
+		In   string
+		Out  string
+	}{
+		{
+			Name: "empty",
+			In:   ``,
+			Out:  ``,
+		},
+		{
+			Name: "normal",
+			In:   `hello world, this is a ((link)) to a file`,
+			Out:  `hello world, this is a <a href="link">link</a> to a file`,
+		},
+		{
+			Name: "nested no parse",
+			In:   `Would this (nested (file (work)))`,
+			Out:  `Would this (nested (file (work)))`,
+		},
+		{
+			Name: "nested",
+			In:   `this should create a (nested (link \((file)))`,
+			Out:  `this should create a (nested (link \<a href="file)">file)</a>`,
+		},
+		{
+			Name: "special characters",
+			In:   `((hello-world with space %?))`,
+			Out:  `<a href="hello-world with space %?">hello-world with space %?</a>`,
+		},
+	}
+	for _, test := range tests {
+		if got := strings.TrimSuffix(parseInternalLinks(test.In), "\n"); got != test.Out {
+			t.Errorf("failed %s\nexpected: \n%q\ngot: \n%q", test.Name, test.Out, got)
+		}
+	}
+}

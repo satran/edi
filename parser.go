@@ -17,6 +17,7 @@ func NewParser(dir string, name string) *Parser {
 }
 
 func (p *Parser) Parse(content string) string {
+	content = parseInternalLinks(content)
 	m := bf.New(bf.WithExtensions(bf.CommonExtensions |
 		bf.HeadingIDs |
 		bf.Footnotes |
@@ -58,7 +59,6 @@ func (p *Parser) Parse(content string) string {
 				matched = true
 				buf.Write(toTask(node.Literal, []byte(`<span class="task">$1</span>&nbsp;`)))
 			}
-
 		}
 		if !matched {
 			renderer.RenderNode(&buf, node, entering)
@@ -77,3 +77,9 @@ var (
 	isTask = taskR.Match
 	toTask = taskR.ReplaceAll
 )
+
+var linkR = regexp.MustCompile(`\(\((.*)\)\)`)
+
+func parseInternalLinks(content string) string {
+	return linkR.ReplaceAllString(content, `<a href="$1">$1</a>`)
+}
