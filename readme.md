@@ -25,23 +25,18 @@ Dabba parses markdown with a few special tricks.
   So a `- [ ]` shows up as a block. A `- [s]` is also rendered. This is useful if you would like to make stages of your tasks.
 
 - Code blocks can be evaluated.
-  When you define an inline code block using
-
-    `!echo "hello world"`
-
-  It runs the command `echo "hello world"` in a shell.
+  When you define an inline code using `` `!echo "hello world"` `` it runs the command `echo "hello world"` in a shell.
   
   Simarly a code fence 
 
+ ````
     ```!
     var="a variable"
     echo $var
     ```
+ ````
 
-  will also be evaluated in a shell. The output of both will not be parsed further and thus you can have these generating HTML.
+  will also be evaluated in a shell. Both use `!` as a signifier to evaluate the code. The output of both will not be parsed further and thus you can have these generating HTML.
 
 - Internal links can be type using `(())`
   So `((Dabba Start))` will generate `<a href="Dabba Start">Dabba Start</a>`.
-
-
-
