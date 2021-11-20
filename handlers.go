@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -207,7 +206,7 @@ func ShellHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		out := run(filepath.Join(s.root, "objects"), "", input.Cmd)
+		out := run(s.root, "", input.Cmd)
 		if err := json.NewEncoder(w).Encode(map[string]interface{}{"output": out}); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
