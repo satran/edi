@@ -2,6 +2,8 @@
 
 Dabba is a box for all your notes, thoughts, pictures, or any digital file. Although I use it for my daily use, I don't think it is ready for public consumption. 
 
+You can see a [demo video](https://youtu.be/MdNUClZ_ppw) of it.
+
 ## Why
 There is a particular freedom in using plain text files to store notes and tasks. It frees you from the whims and fancies of the companies that make software for such. I have been using plain text files for a lot of things. Creating a list of groceries, keep track of the food I ate, or time I spent on some task. It is close to a paper notebook that doesn't have any format. You create the format. This was supplemented with Shell script like awk, sed, and grep. Looking at the tasks across the files were easy. But there was no cross platform way for me to use shell scripts. And thus Dabba was born. Dabba, in Hindi, means a box. A box of all your things. 
 
