@@ -17,7 +17,7 @@ go install github.com/satran/dabba
 
 If you have the executable in the PATH directory you can start the server by
 ```
-dabba -addr "localhost:8080" -dir ~/docs 
+dabba server -addr "localhost:8080" -dir ~/docs 
 ```
 
 ## Markdown
