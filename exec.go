@@ -8,12 +8,12 @@ import (
 )
 
 func run(pwd string, filename string, cmd string) string {
-	c := exec.Command("bash", "-c", cmd)
+	c := exec.Command("sh", "-c", cmd)
 	return runCommand(c, pwd, filename)
 }
 
 func runstdin(pwd string, filename string, stdin []byte) string {
-	c := exec.Command("bash")
+	c := exec.Command("sh")
 	c.Stdin = bytes.NewReader(stdin)
 	return runCommand(c, pwd, filename)
 }
