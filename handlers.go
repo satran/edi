@@ -83,8 +83,8 @@ func EditHandler(s *Store, tmpls *template.Template, path string) http.HandlerFu
 		name := r.URL.Path[len(path):]
 		file, err := s.Get(name)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
+			// File doesn't exist, let's render a template with the name
+			file = Dummy(s.root, name)
 		}
 		if err := tmpls.ExecuteTemplate(w, "new.html", file); err != nil {
 			log.Printf("executing list template: %s", err)
@@ -103,8 +103,8 @@ func FileGetHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
 		}
 		f, err := s.Get(name)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
+			// File doesn't exist, let's render a template with the name
+			f = Dummy(s.root, name)
 		}
 		defer f.Close()
 		if f.Type == "text/plain" {

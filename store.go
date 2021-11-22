@@ -35,7 +35,7 @@ func (s *Store) List() ([]string, error) {
 }
 
 func (s *Store) Get(name string) (*File, error) {
-	f, err := os.OpenFile(s.path(name), os.O_CREATE|os.O_RDONLY, 0600)
+	f, err := os.OpenFile(s.path(name), os.O_RDONLY, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("open file %q: %w", name, err)
 	}

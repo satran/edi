@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"html/template"
 	"io"
@@ -59,4 +60,26 @@ func (f *File) SeekStart() error {
 		return fmt.Errorf("error seeking to begin: %w", err)
 	}
 	return nil
+}
+
+func Dummy(root string, name string) *File {
+	return &File{
+		ReadWriteSeekCloser: &Buffer{&bytes.Buffer{}},
+		Name:                name,
+		Type:                "text/plain",
+		parser:              NewParser(root, name),
+	}
+}
+
+type Buffer struct {
+	*bytes.Buffer
+}
+
+func (b *Buffer) Close() error {
+	// nothing here just a holder to help implement the Closer
+	return nil
+}
+
+func (b *Buffer) Seek(offset int64, whence int) (int64, error) {
+	return 0, nil
 }
