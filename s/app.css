@@ -1,27 +1,90 @@
+/* --- CSS reset from --- */
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+    display: block;
+}
 body {
+    line-height: 1;
     background: #fff;
     color: #333;
     margin: 0;
     padding: 0;
     font-size: 100%;
 }
+ol, ul {
+    padding-left: 1.5em;
+    /*list-style: unset;*/
+}
+blockquote {
+    border-left: 2px solid;
+    padding-left: 1em;
+}
+blockquote, q {
+    quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+    content: '';
+    content: none;
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
 body, textarea, input {
     font-family: "SF Mono", "Inconsolata", "Segoe UI Mono", ui-monospace, Menlo, Monaco, "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
 }
 h1, h2, h3, h4, h5, h6 {
     font-weight: bold;
     font-size: 100%;
+    padding: .5em 0;
 }
-h1 {
-    /*border-bottom: 1px solid;*/
+
+a {
+    color: #333;
+}
+p {
+    padding: .5em 0;
+}
+code {
+    background-color: #efefef;
+    padding: .25em;
+    border-radius: .25em;
+}
+pre code {
+    padding: 0;
+    background: none;
 }
 .highlight {
     border: 5px dashed #ccc;
 }
-a {
-    color: #333;
-}
-
 .btn {
     pointer: cursor;
 }
@@ -134,6 +197,7 @@ textarea.editor:focus{
 #shell-output{
     padding: 1em;
     white-space: pre-wrap;
+    line-height: 1.5;
 }
 #prompt {
     width: calc(100% - 2em);
@@ -163,25 +227,28 @@ textarea.editor:focus{
     a {
         color: #ddd;
     }
+    code {
+	background-color: #222;
+    }
     #header {
-	      background: #000;
-	      border-bottom: 1px solid #555;
+	background: #000;
+	border-bottom: 1px solid #555;
     }
     #header .item.right{
-	      border-left: 1px solid #555;
+	border-left: 1px solid #555;
     }
     input {
-	      background: none;
-	      color: #ddd;
+	background: none;
+	color: #ddd;
     }
     textarea.editor {
-	      background: #000;
-	      color: #ddd;
+	background: #000;
+	color: #ddd;
     }
 }
 @media print{
     body{
-	      max-width:none
+	max-width:none
     }
 }
 @media screen and (max-width: 800px) {
