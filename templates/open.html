@@ -34,18 +34,21 @@
 	              <div id="file-list"></div>
             </div>
         </div>
-        <script type="text/javascript" src="/s/fuzzysort.js"></script>
         <script type="text/javascript">
-         var files = {{.Files}};
-         (function(){
+	  var files = {{.Files}};
+          (function(){
+	      function filterItems(arr, query) {
+		  return arr.filter(el => el.toLowerCase().indexOf(query.toLowerCase()) !== -1)
+	      }
+
              function showResults(val) {
                  res = document.getElementById("file-list");
                  res.innerHTML = '';
                  let list = '';
                  // From https://github.com/farzher/fuzzysort
-                 let terms = fuzzysort.go(val, files)
+                 let terms = filterItems(files, val)
                  for (i=0; i<terms.length; i++) {
-                     file = terms[i].target;
+                     file = terms[i];
                      list += '<a href="' + file + '">' + file + '</a>';
                  }
                  res.innerHTML = list;
