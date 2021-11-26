@@ -15,7 +15,7 @@ import (
 func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	get := FileGetHandler(s, tmpls)
 	new_ := NewHandler(s, tmpls)
-	open := OpenFileHandler(s, tmpls)
+	list := ListFilesHandler(s)
 	edit := EditHandler(s, tmpls, "/edit/")
 	update := FileWriteHandler(s, "/edit/")
 	write := FileWriteHandler(s, "/_new")
@@ -42,10 +42,10 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 				write(wr, r)
 			}
 
-		case r.URL.Path == "/_open":
+		case r.URL.Path == "/_ls":
 			switch r.Method {
 			case http.MethodGet:
-				open(wr, r)
+				list(wr, r)
 			}
 
 		case strings.HasPrefix(r.URL.Path, "/edit"):
@@ -162,27 +162,18 @@ func FileWriteHandler(s *Store, path string) http.HandlerFunc {
 	}
 }
 
-func OpenFileHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
+func ListFilesHandler(s *Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		files, err := s.List()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		raw, err := json.Marshal(&files)
-		if err != nil {
+		if err := json.NewEncoder(w).Encode(&files); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if err := tmpls.ExecuteTemplate(w, "open.html", map[string]interface{}{
-			"Files": template.JS(raw),
-		}); err != nil {
-			log.Printf("executing shell template: %s", err)
-			writeError(w, http.StatusInternalServerError)
-			return
-		}
 		return
-
 	}
 }
 

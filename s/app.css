@@ -129,6 +129,30 @@ pre code {
     height: 100%;
     margin-bottom: 3rem;
 }
+.window {
+    position: fixed;
+    top: 1em;
+    bottom: 1em;
+    background: #fff;
+    border: 1px solid;
+    width: 44em;
+    box-shadow: 0 0 12px 0 #ccc;
+    border-radius: 3px;
+    z-index: 1000;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+.window .header {
+    padding: 1em;
+    border-bottom: 1px solid;
+}
+.window .title{
+    
+}
+.window .btn{
+    float: right;
+    cursor: pointer;
+}
 .label.right {
     text-align: right;
 }
@@ -199,7 +223,7 @@ textarea.editor:focus{
     white-space: pre-wrap;
     line-height: 1.5;
 }
-#prompt {
+.prompt {
     width: calc(100% - 2em);
     border: none;
     font-size: 100%;
@@ -208,15 +232,15 @@ textarea.editor:focus{
     background: none;
     border-radius: 0;
 }
-#file-list {
+.file-list {
     padding: 1em;
 }
-#file-list a {
+.file-list a {
     display: block;
     padding: .5em;
     text-decoration: none;
 }
-#file-list a:hover {
+.file-list a:hover {
     border-bottom: 1px solid;
 }
 @media (prefers-color-scheme: dark) {
