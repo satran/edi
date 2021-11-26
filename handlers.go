@@ -70,7 +70,7 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 
 func NewHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := tmpls.ExecuteTemplate(w, "new.html", nil); err != nil {
+		if err := tmpls.ExecuteTemplate(w, "edit.html", nil); err != nil {
 			log.Printf("executing list template: %s", err)
 			writeError(w, http.StatusInternalServerError)
 			return
@@ -86,7 +86,7 @@ func EditHandler(s *Store, tmpls *template.Template, path string) http.HandlerFu
 			// File doesn't exist, let's render a template with the name
 			file = Dummy(s.root, name)
 		}
-		if err := tmpls.ExecuteTemplate(w, "new.html", file); err != nil {
+		if err := tmpls.ExecuteTemplate(w, "edit.html", file); err != nil {
 			log.Printf("executing list template: %s", err)
 			writeError(w, http.StatusInternalServerError)
 			return
