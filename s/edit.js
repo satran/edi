@@ -70,8 +70,11 @@
         editor.style.height = (editor.scrollHeight) + 'px';
     }
 
-	  let cancel;
+    let cancel;
     editor.addEventListener("keydown", function (event) {
+	// disabling the global shortcuts to be called
+	event.stopPropagation();
+
         if (keymap[event.key]) {
             event.preventDefault();
             const pos = editor.selectionStart;

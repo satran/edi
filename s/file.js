@@ -8,16 +8,19 @@ function hideParent(ev) {
     let windows = document.querySelectorAll(".window");
     windows.forEach(w => w.hidden = true);
 
+    function openWindow(win) {
+	let parents = document.querySelectorAll(".window."+win);
+	parents.forEach(w => {
+	    w.hidden = false;
+	    let prompt = w.querySelector(".prompt");
+	    prompt.focus();
+	});
+    }
     const windowBtns = document.querySelectorAll(".btn");
     windowBtns.forEach(w => {
 	w.addEventListener("click", function (event) {
-	    let data = event.target.closest(".btn").dataset.window;
-	    let parents = document.querySelectorAll(".window."+data);
-	    parents.forEach(w => {
-		w.hidden = false;
-		let prompt = w.querySelector(".prompt");
-		prompt.focus();
-	    });
+	    let win = event.target.closest(".btn").dataset.window;
+	    openWindow(win);
 	});
     });
 
@@ -43,6 +46,8 @@ function hideParent(ev) {
     const openPrompt = document.querySelector(".prompt.open");
     let waiting = false;
     openPrompt.addEventListener("keydown", function (event) {
+	// disabling the global shortcuts to be called
+	event.stopPropagation();
 	if (event.key === "Escape") {
 	    hideParent(event);
 	}
@@ -60,7 +65,9 @@ function hideParent(ev) {
     // Shell command handling
     let shellPrompt = document.querySelector(".prompt.shell");
     let output = document.querySelector(".shell-output");
-    shellPrompt.addEventListener('keyup', ev => {
+    shellPrompt.addEventListener('keydown', ev => {
+	// disabling the global shortcuts to be called
+	ev.stopPropagation();
 	if (event.key === "Escape") {
 	    hideParent(event);
 	}
@@ -83,5 +90,20 @@ function hideParent(ev) {
 	    .catch((error) => {
 		console.error('Error:', error);
 	    });
+    });
+
+    // Setup keybinding
+    document.addEventListener('keydown', function(ev) {
+	switch (ev.key){
+	case "e":
+	    document.location = "/edit" + document.location.pathname;
+	    break;
+	case "o":
+	    openWindow("open");
+	    break;
+	case "s":
+	    openWindow("shell");
+	    break;
+	}
     });
 })();
