@@ -105,14 +105,14 @@ pre code {
 #header {
     position: fixed;
     left: 0;
-    top: 0;
+    bottom: 0;
     width: 100%;
     background: #fff;
-    border-bottom: 1px solid #ccc;
 }
 #header>div{
     max-width: 44em;
     margin: 0 auto;
+    border: 1px solid #ccc;
 }
 #header .item {
     display: inline-block;
@@ -124,7 +124,6 @@ pre code {
 }
 .container {
     margin: 0 auto;
-    margin-top: 3em;
     max-width: 44em;
     height: 100%;
     margin-bottom: 3rem;
@@ -254,9 +253,9 @@ textarea.editor:focus{
     code {
 	background-color: #222;
     }
-    #header {
+    #header>div{
 	background: #000;
-	border-bottom: 1px solid #555;
+	border: 1px solid #555;
     }
     #header .item.right{
 	border-left: 1px solid #555;
