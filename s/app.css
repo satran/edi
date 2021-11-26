@@ -218,8 +218,8 @@ textarea.editor:focus{
     max-width: 100%;
 }
 
-#shell-output{
-    padding: 1em;
+.shell-output{
+    padding: 0 1em;
     white-space: pre-wrap;
     line-height: 1.5;
 }

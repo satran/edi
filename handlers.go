@@ -179,14 +179,6 @@ func ListFilesHandler(s *Store) http.HandlerFunc {
 
 func ShellHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			if err := tmpls.ExecuteTemplate(w, "shell.html", nil); err != nil {
-				log.Printf("executing shell template: %s", err)
-				writeError(w, http.StatusInternalServerError)
-				return
-			}
-			return
-		}
 		if r.Method != http.MethodPost {
 			writeError(w, http.StatusMethodNotAllowed)
 		}

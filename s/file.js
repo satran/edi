@@ -4,21 +4,24 @@ function hideParent(ev) {
 }
 
 (function(){
-
     // Ensure all windows are closed on open
     let windows = document.querySelectorAll(".window");
     windows.forEach(w => w.hidden = true);
 
-    const openBtn = document.getElementById("open-btn");
-    openBtn.addEventListener("click", function (event) {
-	let parents = document.querySelectorAll(".window.open");
-	parents.forEach(w => {
-	    w.hidden = false;
-	    let prompt = w.querySelector(".prompt");
-	    prompt.focus();
+    const windowBtns = document.querySelectorAll(".btn");
+    windowBtns.forEach(w => {
+	w.addEventListener("click", function (event) {
+	    let data = event.target.closest(".btn").dataset.window;
+	    let parents = document.querySelectorAll(".window."+data);
+	    parents.forEach(w => {
+		w.hidden = false;
+		let prompt = w.querySelector(".prompt");
+		prompt.focus();
+	    });
 	});
     });
 
+    // Open files handling
     let files;
     function filterItems(arr, query) {
 	return arr.filter(el => el.toLowerCase().indexOf(query.toLowerCase()) !== -1)
@@ -37,9 +40,9 @@ function hideParent(ev) {
         res.innerHTML = list;
     }
 
-    const prompt = document.querySelector(".prompt.open");
+    const openPrompt = document.querySelector(".prompt.open");
     let waiting = false;
-    prompt.addEventListener("keydown", function (event) {
+    openPrompt.addEventListener("keydown", function (event) {
 	if (event.key === "Escape") {
 	    hideParent(event);
 	}
@@ -50,6 +53,35 @@ function hideParent(ev) {
 		.then(data => files = data);
 	    return;
 	}
-        showResults(event.target.closest(".window"), prompt.value);
+        showResults(event.target.closest(".window"), openPrompt.value);
+    });
+
+
+    // Shell command handling
+    let shellPrompt = document.querySelector(".prompt.shell");
+    let output = document.querySelector(".shell-output");
+    shellPrompt.addEventListener('keyup', ev => {
+	if (event.key === "Escape") {
+	    hideParent(event);
+	}
+
+	if (ev.keyCode !== 13) return;
+
+	let cmd = {cmd: shellPrompt.value};
+	fetch('_sh', {
+	    method: 'POST',
+	    headers: {
+		'Content-Type': 'application/json',
+	    },
+	    body: JSON.stringify(cmd),
+	})
+	    .then(response => response.json())
+	    .then(data => {
+		output.innerHTML += "\n" + "$ " + shellPrompt.value + "\n" + data.output;
+		shellPrompt.value = "";
+	    })
+	    .catch((error) => {
+		console.error('Error:', error);
+	    });
     });
 })();
