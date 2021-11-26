@@ -26,7 +26,7 @@
         // Might be a good idea to add a snippet for a tables sometime.
         "@l": '((link ""))'
     };
-	  const filename = document.location.pathname;
+    const filename = document.location.pathname;
 
     editor.moveCursor = function(i) {
         const pos = editor.selectionStart;
@@ -108,10 +108,10 @@
             }
         }
 
-	      if (cancel) clearTimeout(cancel);
-	      cancel = setTimeout(() => {
-		        localStorage.setItem(filename, event.target.value);
-		    }, 1000);
+	if (cancel) clearTimeout(cancel);
+	cancel = setTimeout(() => {
+	    localStorage.setItem(filename, event.target.value);
+	}, 1000);
     });
 
     editor.addEventListener('input', resize);
@@ -163,19 +163,19 @@
     });
 
     const savebtn = document.getElementById("save-btn");
-	  const form = document.getElementById("new-form");
-	  savebtn.addEventListener('click', event => {
-	      localStorage.removeItem(filename);
-	      form.submit();
-	  });
+    const form = document.getElementById("new-form");
+    savebtn.addEventListener('click', event => {
+	localStorage.removeItem(filename);
+	form.submit();
+    });
 
-	  // Load draft from localstorage
-	  let value = localStorage.getItem(filename);
-	  if (value && value.length > 0) {
-	      if (confirm('Load unsaved draft?')) {
-	          editor.value = value;
-	      }
-	  }
+    // Load draft from localstorage
+    let value = localStorage.getItem(filename);
+    if (value && value.length > 0) {
+	if (confirm('Load unsaved draft?')) {
+	    editor.value = value;
+	}
+    }
 
     // on load for the first time resize the editor to full page
     resize();
