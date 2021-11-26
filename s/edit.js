@@ -70,6 +70,12 @@
         editor.style.height = (editor.scrollHeight) + 'px';
     }
 
+    let nameInput = document.querySelector('input[name="name"]');
+    nameInput.addEventListener("keydown", e => {
+	// disabling the global shortcuts to be called
+	event.stopPropagation();	
+    });
+
     let cancel;
     editor.addEventListener("keydown", function (event) {
 	// disabling the global shortcuts to be called
