@@ -288,4 +288,12 @@ textarea.editor:focus{
 	right: 1em;
 	width: inherit;
     }
+    /* Works better when the header is on top for mobiles */
+    #header {
+	bottom: inherit;
+	top: 0;
+    }
+    .container {
+	margin-top: 3rem;
+    }
 }
