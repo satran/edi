@@ -96,6 +96,9 @@ function hideParent(ev) {
     document.addEventListener('keydown', function(ev) {
 	switch (ev.key){
 	case "e":
+	    if (document.location.pathname.startsWith("/edit")) {
+		break;
+	    }
 	    document.location = "/edit" + document.location.pathname;
 	    break;
 	case "o":
@@ -105,5 +108,6 @@ function hideParent(ev) {
 	    openWindow("shell");
 	    break;
 	}
+	ev.stopPropagation();
     });
 })();
