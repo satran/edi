@@ -261,6 +261,10 @@ textarea.editor:focus{
     #header .item.right{
 	border-left: 1px solid #555;
     }
+    .window {
+	background: #000;
+	box-shadow: 0 0 12px 0 #222;
+    }
     input {
 	background: none;
 	color: #ddd;
@@ -279,5 +283,10 @@ textarea.editor:focus{
     .file {
         padding: 1em;
         margin: 0;
+    }
+    .window {
+	left: 1em;
+	right: 1em;
+	width: inherit;
     }
 }
