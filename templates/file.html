@@ -54,15 +54,15 @@
       </div>
       <div class="window shell">
 	<div class="header">
-	  <span class="title">Run Command</span>
 	  <span class="btn" onclick="hideParent(event)">
 	    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
 	      <path fill-rule="evenodd" d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0Z"/>
 	      <path fill-rule="evenodd" d="M2.146 2.146a.5.5 0 0 0 0 .708l11 11a.5.5 0 0 0 .708-.708l-11-11a.5.5 0 0 0-.708 0Z"/>
 	    </svg>
 	  </span>
+	  <span class="title">Run Command</span>
 	</div>
-	<div>
+	<div class="body">
 	  <div class="shell-output"></div>
 	  <input class="prompt shell" autocomplete="off"autocapitalize="off" type="text" placeholder="type command here" \>
 	</div>
@@ -70,16 +70,18 @@
 
       <div class="window open">
 	<div class="header">
-	  <span class="title">Open File</span>
 	  <span class="btn" onclick="hideParent(event)">
 	    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
 	      <path fill-rule="evenodd" d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0Z"/>
 	      <path fill-rule="evenodd" d="M2.146 2.146a.5.5 0 0 0 0 .708l11 11a.5.5 0 0 0 .708-.708l-11-11a.5.5 0 0 0-.708 0Z"/>
 	    </svg>
 	  </span>
+	  <span class="title">Open File</span>
 	</div>
-	<input autofocus class="prompt open" autocomplete="off" autocapitalize="off" type="text" placeholder="type filename here..." \>
-	<div class="file-list"></div>
+	<div class="body">
+	  <input autofocus class="prompt open" autocomplete="off" autocapitalize="off" type="text" placeholder="type filename here..." \>
+	  <div class="file-list"></div>
+	</div>
       </div>
     </div>
     <script type="text/javascript" src="/s/file.js"></script>

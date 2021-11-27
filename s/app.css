@@ -105,7 +105,7 @@ pre code {
 #header {
     position: fixed;
     left: 0;
-    bottom: 0;
+    top: 0;
     width: 100%;
     background: #fff;
 }
@@ -113,6 +113,7 @@ pre code {
     max-width: 44em;
     margin: 0 auto;
     border: 1px solid #ccc;
+    border-top: none;
 }
 #header .item {
     display: inline-block;
@@ -126,6 +127,7 @@ pre code {
     margin: 0 auto;
     max-width: 44em;
     height: 100%;
+    margin-top: 3rem;
     margin-bottom: 3rem;
 }
 .window {
@@ -142,15 +144,15 @@ pre code {
     overflow-x: hidden;
 }
 .window .header {
-    padding: 1em;
+    display: flex;
     border-bottom: 1px solid;
 }
 .window .title{
-    
+    padding: 1em;
 }
 .window .btn{
-    float: right;
-    cursor: pointer;
+    padding: 1em;
+    border-right: 1px solid;
 }
 .label.right {
     text-align: right;
@@ -253,9 +255,12 @@ textarea.editor:focus{
     code {
 	background-color: #222;
     }
-    #header>div{
+    #header {
 	background: #000;
+    }
+    #header>div{
 	border: 1px solid #555;
+	border-top: none;
     }
     #header .item.right{
 	border-left: 1px solid #555;
@@ -284,16 +289,17 @@ textarea.editor:focus{
         margin: 0;
     }
     .window {
-	left: 1em;
-	right: 1em;
-	width: inherit;
-    }
-    /* Works better when the header is on top for mobiles */
-    #header {
-	bottom: inherit;
 	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	width: inherit;
+	border: none;
     }
-    .container {
-	margin-top: 3rem;
+    #header>div{
+	width: 100%;
+	border-left: none;
+	border-right: none;
     }
+
 }
