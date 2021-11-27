@@ -101,6 +101,9 @@ function hideParent(ev) {
 	    }
 	    document.location = "/edit" + document.location.pathname;
 	    break;
+	case "n":
+	    document.location = "/_new"
+	    break;
 	case "o":
 	    openWindow("open");
 	    break;
