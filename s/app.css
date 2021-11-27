@@ -59,6 +59,7 @@ table {
 }
 
 body, textarea, input {
+    /*font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; */
     font-family: "SF Mono", "Inconsolata", "Segoe UI Mono", ui-monospace, Menlo, Monaco, "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
 }
 h1, h2, h3, h4, h5, h6 {
@@ -107,13 +108,12 @@ pre code {
     left: 0;
     top: 0;
     width: 100%;
-    background: #fff;
+    background: #efefef;
+    border-bottom: 1px solid #ccc;
 }
 #header>div{
-    max-width: 44em;
     margin: 0 auto;
-    border: 1px solid #ccc;
-    border-top: none;
+    max-width: 44em;
 }
 #header .item {
     display: inline-block;
@@ -256,11 +256,8 @@ textarea.editor:focus{
 	background-color: #222;
     }
     #header {
-	background: #000;
-    }
-    #header>div{
-	border: 1px solid #555;
-	border-top: none;
+	background: #222;
+	border-bottom: 1px solid #555;
     }
     #header .item.right{
 	border-left: 1px solid #555;
@@ -296,10 +293,4 @@ textarea.editor:focus{
 	width: inherit;
 	border: none;
     }
-    #header>div{
-	width: 100%;
-	border-left: none;
-	border-right: none;
-    }
-
 }
