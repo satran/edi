@@ -113,9 +113,9 @@ pre code {
 }
 #header .title {
     padding: 1em;
-    background: #efefef;
+    background: #fff;
     font-weight: bold;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid #efefef;
 }
 #header .title>div {
     max-width: 44em;
@@ -272,7 +272,7 @@ textarea.editor:focus{
     }
     #header .title {
 	background: #000;
-	border-bottom: 1px solid #ddd;
+	border-bottom: 1px solid #222;
     }
     #header .item {
 	background: #000;
