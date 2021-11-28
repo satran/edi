@@ -76,6 +76,14 @@
 	event.stopPropagation();	
     });
 
+    const savebtn = document.getElementById("save-btn");
+    const form = document.getElementById("new-form");
+    function saveForm() {
+	localStorage.removeItem(filename);
+	form.submit();
+    }
+    savebtn.addEventListener('click', saveForm);
+
     let cancel;
     editor.addEventListener("keydown", function (event) {
 	// disabling the global shortcuts to be called
@@ -113,6 +121,10 @@
                 editor.insertText("\n" + bullet.bullet);
             }
         }
+	if ((event.metaKey || event.ctrlKey)  && event.keyCode == 83) {
+	    event.preventDefault();
+	    saveForm();
+	}
 
 	if (cancel) clearTimeout(cancel);
 	cancel = setTimeout(() => {
@@ -167,14 +179,7 @@
         // Prevent default behavior (Prevent file from being opened)
         ev.preventDefault();
     });
-
-    const savebtn = document.getElementById("save-btn");
-    const form = document.getElementById("new-form");
-    savebtn.addEventListener('click', event => {
-	localStorage.removeItem(filename);
-	form.submit();
-    });
-
+    //
     // Load draft from localstorage
     let value = localStorage.getItem(filename);
     if (value && value.length > 0) {
