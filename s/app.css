@@ -105,44 +105,31 @@ pre code {
     font-size: .8em;
     font-family: "SF Mono", "Inconsolata", "Segoe UI Mono", ui-monospace, Menlo, Monaco, "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
 }
-#header {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 100%;
-}
-#header .title {
-    padding: 1em;
+.title {
+    padding: 1em 0;
     background: #fff;
     font-weight: bold;
     border-bottom: 1px solid #efefef;
 }
-#header .title>div {
-    max-width: 44em;
-    margin: 0 auto;
-}
-#header .btns{
+.btns{
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0px;
     text-align: center;
     margin: 0 auto;
     max-width: 44em;
+    background: #fff;
 }
-#header .item {
-    margin: .5em;
+.btns .item {
     text-decoration: none;
     display: inline-block;
-    background: #fff;
-    padding: .2em;
+    padding: 1em;
     border-radius: .3em;
-}
-#header .item.right{
-    float: right;
-    border-left: 1px solid #ccc;
 }
 .container {
     margin: 0 auto;
     max-width: 44em;
     height: 100%;
-    margin-top: 5rem;
     margin-bottom: 3rem;
 }
 .window {
@@ -270,11 +257,11 @@ textarea.editor:focus{
     code {
 	background-color: #222;
     }
-    #header .title {
+    .title {
 	background: #000;
 	border-bottom: 1px solid #222;
     }
-    #header .item {
+    .btns {
 	background: #000;
     }
     .window {
