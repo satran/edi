@@ -56,11 +56,33 @@ q:before, q:after {
 table {
     border-collapse: collapse;
     border-spacing: 0;
+    margin-bottom: 2em;
+    width: 100%;
 }
+th {
+    border-bottom: 2px solid #efefef;
+    font-weight: bold;
+    text-align: left;
+}
+td { border-bottom: 1px solid #efefef; }
+caption, th, td {
+    padding: 4px 10px 4px 0;
+}
+caption {
+    background: #f1f1f1;
+    padding: 10px 0;
+    margin-bottom: 1em;
+}
+
+tr,td,th {
+    vertical-align: middle;
+}
+
+/* Use this if you use span-x classes on th/td. */
+table .last { padding-right: 0; } 
 
 body, textarea, input {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Open sans", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; 
-    /*font-family: "SF Mono", "Inconsolata", "Segoe UI Mono", ui-monospace, Menlo, Monaco, "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;*/
 }
 h1, h2, h3, h4, h5, h6 {
     font-weight: bold;
@@ -133,11 +155,12 @@ pre code {
     margin-bottom: 3rem;
 }
 .window {
+    font-family: "SF Mono", "Inconsolata", "Segoe UI Mono", ui-monospace, Menlo, Monaco, "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
     position: fixed;
     top: 1em;
     bottom: 1em;
     background: #fff;
-    border: 1px solid;
+    border: 1px solid #ccc;
     width: 44em;
     box-shadow: 0 0 12px 0 #ccc;
     border-radius: 3px;
@@ -147,14 +170,14 @@ pre code {
 }
 .window .header {
     display: flex;
-    border-bottom: 1px solid;
+    border-bottom: 1px solid #ccc;
 }
 .window .title{
     padding: 1em;
 }
 .window .btn{
     padding: 1em;
-    border-right: 1px solid;
+    border-right: 1px solid #ccc;
 }
 .label.right {
     text-align: right;
@@ -178,7 +201,7 @@ input.title {
     font-weight: bold;
     border-radius: 0;
 }
-input.field:focus,#prompt:focus{
+input.field:focus,.prompt:focus{
     border-bottom: 1px solid red;
 }
 input.hidden {
@@ -227,6 +250,7 @@ textarea.editor:focus{
     line-height: 1.5;
 }
 .prompt {
+    font-family: "SF Mono", "Inconsolata", "Segoe UI Mono", ui-monospace, Menlo, Monaco, "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
     width: calc(100% - 2em);
     border: none;
     font-size: 100%;
@@ -266,7 +290,10 @@ textarea.editor:focus{
     }
     .window {
 	background: #000;
-	box-shadow: 0 0 12px 0 #222;
+	box-shadow: none;
+    }
+    .window, .window .header, .window .btn{
+	border-color: #333;
     }
     input {
 	background: none;
@@ -275,6 +302,12 @@ textarea.editor:focus{
     textarea.editor {
 	background: #000;
 	color: #ddd;
+    }
+    th,td {
+	border-color: #333;
+    }
+    caption {
+	background: #222;
     }
 }
 @media print{
@@ -287,6 +320,9 @@ textarea.editor:focus{
         padding: 1em;
         margin: 0;
     }
+    .title {
+        padding: 1em;
+    }
     .window {
 	top: 0;
 	bottom: 0;
@@ -295,4 +331,7 @@ textarea.editor:focus{
 	width: inherit;
 	border: none;
     }
+    border: 1px solid #ccc;
+    border: 1px solid #ccc;
+    border: 1px solid #ccc;
 }
