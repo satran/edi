@@ -1,8 +1,9 @@
-package main
+package parser
 
 import (
 	"bytes"
 	"regexp"
+	"github.com/satran/edi/exec"
 
 	bf "github.com/russross/blackfriday/v2"
 )
@@ -12,7 +13,7 @@ type Parser struct {
 	filename string
 }
 
-func NewParser(dir string, name string) *Parser {
+func New(dir string, name string) *Parser {
 	return &Parser{root: dir, filename: name}
 }
 
@@ -33,7 +34,7 @@ func (p *Parser) Parse(content string) string {
 		case bf.Code:
 			if shouldEval(node.Literal) {
 				comm := bytes.TrimPrefix(node.Literal, []byte("!"))
-				buf.WriteString(run(p.root, p.filename, string(comm)))
+				buf.WriteString(exec.Run(p.root, p.filename, string(comm)))
 				matched = true
 			}
 		case bf.CodeBlock:
@@ -42,7 +43,7 @@ func (p *Parser) Parse(content string) string {
 				break
 			}
 			if shouldEval(node.CodeBlockData.Info) {
-				buf.WriteString(runstdin(p.root, p.filename, node.Literal))
+				buf.WriteString(exec.RunStdin(p.root, p.filename, node.Literal))
 				matched = true
 			}
 		case bf.List:

@@ -1,4 +1,4 @@
-package main
+package parser
 
 import (
 	"strings"
@@ -49,7 +49,7 @@ func TestParse(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		p := NewParser(".", test.Name)
+		p := New(".", test.Name)
 		if got := strings.TrimSuffix(p.Parse(test.In), "\n"); got != test.Out {
 			t.Errorf("failed %s\nexpected: \n%q\ngot: \n%q", test.Name, test.Out, got)
 		}

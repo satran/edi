@@ -1,4 +1,4 @@
-package main
+package exec
 
 import (
 	"strings"
@@ -18,7 +18,7 @@ func TestRun(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		got := strings.TrimSuffix(run(".", test.Name, test.In), "\n")
+		got := strings.TrimSuffix(Run(".", test.Name, test.In), "\n")
 		if got != test.Out {
 			t.Errorf("failed %s\nexpected: \n%q\ngot: \n%q", test.Name, test.Out, got)
 		}
@@ -40,7 +40,7 @@ echo $name | awk '{print "hello " $0}'
 		},
 	}
 	for _, test := range tests {
-		got := strings.TrimSuffix(runstdin(".", test.Name, []byte(test.In)), "\n")
+		got := strings.TrimSuffix(RunStdin(".", test.Name, []byte(test.In)), "\n")
 		if got != test.Out {
 			t.Errorf("failed %s\nexpected: \n%q\ngot: \n%q", test.Name, test.Out, got)
 		}

@@ -1,4 +1,4 @@
-package main
+package exec
 
 import (
 	"bytes"
@@ -7,12 +7,16 @@ import (
 	"os/exec"
 )
 
-func run(pwd string, filename string, cmd string) string {
+// Run command under the working directory.
+// Sets FILENAME env variable to filename and adds pwd to PATH
+func Run(pwd string, filename string, cmd string) string {
 	c := exec.Command("sh", "-c", cmd)
 	return runCommand(c, pwd, filename)
 }
 
-func runstdin(pwd string, filename string, stdin []byte) string {
+// RunStdin runs command under the working directory passing in stdin
+// Sets FILENAME env variable to filename and adds pwd to PATH
+func RunStdin(pwd string, filename string, stdin []byte) string {
 	c := exec.Command("sh")
 	c.Stdin = bytes.NewReader(stdin)
 	return runCommand(c, pwd, filename)
