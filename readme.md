@@ -12,12 +12,12 @@ Edi does a few things. It is in the very early stage of development so don't exp
 ## Install
 You need a [Go](https://golang.org) compiler. With the compiler ready you just need to run
 ```
-go install github.com/satran/edi
+go install github.com/satran/edi/cmd/edi-http
 ```
 
 If you have the executable in the PATH directory you can start the server by
 ```
-edi server -addr "localhost:8080" -dir ~/docs 
+edi-http -addr "localhost:8080" -dir ~/docs 
 ```
 
 ## Markdown
