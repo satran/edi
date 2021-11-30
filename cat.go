@@ -34,9 +34,9 @@ func runCat(cmd *Command, args []string) {
 }
 
 func catFile(filename string, content string) {
-	dir := os.Getenv("DABBA_DIR")
+	dir := os.Getenv("EDI_DIR")
 	if dir == "" {
-		dir = dabbaDefaultDir
+		dir = ediDefaultDir
 	}
 	p := NewParser(dir, filename)
 	fmt.Print(string(p.Parse(content)))

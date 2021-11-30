@@ -8,22 +8,22 @@ RUN go mod download
 
 COPY . ./
 
-RUN go build -o /dabba
+RUN go build -o /edi
 
 ## Deploy
 FROM alpine:3.14
 
 WORKDIR /
 
-COPY --from=build /dabba /bin/dabba
-RUN addgroup -S dabba -g 1000 && adduser -S dabba -G dabba -u 1000
-RUN mkdir -p /home/dabba/dabba
-RUN chown -R dabba:dabba /home/dabba
+COPY --from=build /edi /bin/edi
+RUN addgroup -S edi -g 1000 && adduser -S edi -G edi -u 1000
+RUN mkdir -p /home/edi/edi
+RUN chown -R edi:edi /home/edi
 RUN apk update && apk upgrade && \
     apk add --no-cache bash git openssh
 
 EXPOSE 8080
 
-USER dabba:dabba
+USER edi:edi
 
-ENTRYPOINT ["dabba", "server", "-addr", "0.0.0.0:8080"]
+ENTRYPOINT ["edi", "server", "-addr", "0.0.0.0:8080"]

@@ -24,7 +24,7 @@ func runCommand(c *exec.Cmd, pwd string, filename string) string {
 	path := os.Getenv("PATH")
 	path += ":" + pwd
 	os.Setenv("PATH", path)
-	os.Setenv("DABBA_DIR", pwd)
+	os.Setenv("EDI_DIR", pwd)
 	c.Env = append(os.Environ(), "FILE="+filename)
 	c.Dir = pwd
 	// ignore error as it mostly shows error code when something fails.

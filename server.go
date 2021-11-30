@@ -22,7 +22,7 @@ var cmdServer = &Command{
   -basic
     	enable Basic Authentication, requires you to set USERNAME and PASSWORD environment variables
   -dir string
-    	directory that stores the data (default "~/dabba")
+    	directory that stores the data (default "~/edi")
   -start-file string
     	file to render on index (default "Start")
   -static string
@@ -40,7 +40,7 @@ var (
 
 func init() {
 	cmdServer.Flag.StringVar(&serverStaticDir, "static", "", "Render static files from folder")
-	cmdServer.Flag.StringVar(&serverDocDir, "dir", dabbaDefaultDir, "directory that stores the data")
+	cmdServer.Flag.StringVar(&serverDocDir, "dir", ediDefaultDir, "directory that stores the data")
 	cmdServer.Flag.StringVar(&serverAddr, "addr", "127.0.0.1:8080", "addr and port to serve from")
 	cmdServer.Flag.BoolVar(&serverBasicAuth, "basic", false, "enable Basic Authentication, requires you to set USERNAME and PASSWORD environment variables")
 	cmdServer.Flag.StringVar(&serverStartFile, "start-file", "Start", "file to render on index")

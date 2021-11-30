@@ -1,4 +1,4 @@
-module github.com/satran/dabba
+module github.com/satran/edi
 
 go 1.17
 

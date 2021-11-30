@@ -19,14 +19,14 @@ var commands = []*Command{
 	cmdCat,
 }
 
-var dabbaDefaultDir string
+var ediDefaultDir string
 
 func init() {
 	usr, err := user.Current()
 	if err != nil {
 		panic(err)
 	}
-	dabbaDefaultDir = filepath.Join(usr.HomeDir, "dabba")
+	ediDefaultDir = filepath.Join(usr.HomeDir, "edi")
 }
 
 func main() {
@@ -55,7 +55,7 @@ func main() {
 			return
 		}
 	}
-	log.New(os.Stderr, "", 0).Printf("dabba: unknown subcommand %q\nRun dabba help' for usage.\n", args[0])
+	log.New(os.Stderr, "", 0).Printf("edi: unknown subcommand %q\nRun edi help' for usage.\n", args[0])
 }
 
 type Command struct {
@@ -67,10 +67,10 @@ type Command struct {
 	// The first word in the line is taken to be the command name.
 	UsageLine string
 
-	// Short is the short description shown in the 'dabba help' output.
+	// Short is the short description shown in the 'edi help' output.
 	Short string
 
-	// Long is the long message shown in the 'dabba help <this-command>' output.
+	// Long is the long message shown in the 'edi help <this-command>' output.
 	Long string
 
 	// Flag is a set of flags specific to this command.
@@ -97,15 +97,15 @@ func (c *Command) Usage() {
 	os.Exit(2)
 }
 
-var usageTemplate = `usage: dabba command [arguments]
+var usageTemplate = `usage: edi command [arguments]
 
 The commands are:{{range .}}
     {{.Name | printf "%-11s"}} {{.Short}}{{end}}
 
-Use "dabba help [command]" for more information about a command.
+Use "edi help [command]" for more information about a command.
 `
 
-var helpTemplate = `usage: dabba {{.UsageLine}}
+var helpTemplate = `usage: edi {{.UsageLine}}
 
 {{.Long | trim}}
 `
@@ -141,12 +141,12 @@ func usage() {
 func help(args []string) {
 	if len(args) == 0 {
 		printUsage(os.Stdout)
-		// not exit 2: succeeded at 'dabba help'.
+		// not exit 2: succeeded at 'edi help'.
 		return
 	}
 	if len(args) != 1 {
-		fmt.Fprintf(os.Stderr, "usage: dabba help command\n\nToo many arguments given.\n")
-		os.Exit(2) // failed at 'dabba help'
+		fmt.Fprintf(os.Stderr, "usage: edi help command\n\nToo many arguments given.\n")
+		os.Exit(2) // failed at 'edi help'
 	}
 
 	arg := args[0]
@@ -154,11 +154,11 @@ func help(args []string) {
 	for _, cmd := range commands {
 		if cmd.Name() == arg {
 			tmpl(os.Stdout, helpTemplate, cmd)
-			// not exit 2: succeeded at 'dabba help cmd'.
+			// not exit 2: succeeded at 'edi help cmd'.
 			return
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, "Unknown help topic %#q.  Run 'dabba help'.\n", arg)
-	os.Exit(2) // failed at 'dabba help cmd'
+	fmt.Fprintf(os.Stderr, "Unknown help topic %#q.  Run 'edi help'.\n", arg)
+	os.Exit(2) // failed at 'edi help cmd'
 }
