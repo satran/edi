@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 // Run command under the working directory.
@@ -25,9 +26,7 @@ func RunStdin(pwd string, filename string, stdin []byte) string {
 func runCommand(c *exec.Cmd, pwd string, filename string) string {
 	// todo: this is a simple hack to ensure the scripts in the
 	// object directory is in the PATH.
-	path := os.Getenv("PATH")
-	path += ":" + pwd
-	os.Setenv("PATH", path)
+	os.Setenv("PATH", addPath(os.Getenv("PATH"), pwd))
 	os.Setenv("EDI_DIR", pwd)
 	c.Env = append(os.Environ(), "FILE="+filename)
 	c.Dir = pwd
@@ -38,4 +37,15 @@ func runCommand(c *exec.Cmd, pwd string, filename string) string {
 		log.Println(err)
 	}
 	return string(out)
+}
+
+func addPath(path, dir string) string {
+	dirs := strings.Split(path, ":")
+	for _, other := range dirs {
+		if other == dir {
+			return path
+		}
+	}
+	dirs = append(dirs, dir)
+	return strings.Join(dirs, ":")
 }
