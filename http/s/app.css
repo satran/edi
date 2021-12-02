@@ -314,6 +314,9 @@ textarea.editor:focus{
     body{
 	max-width:none
     }
+    .btns {
+	display: none;
+    }
 }
 @media screen and (max-width: 800px) {
     .file {
@@ -331,7 +334,4 @@ textarea.editor:focus{
 	width: inherit;
 	border: none;
     }
-    border: 1px solid #ccc;
-    border: 1px solid #ccc;
-    border: 1px solid #ccc;
 }
