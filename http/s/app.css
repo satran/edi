@@ -141,6 +141,20 @@ pre code {
     font-weight: bold;
     border-bottom: 1px solid #efefef;
 }
+input.title {
+    font-weight: bold;
+    border-radius: 0;
+    padding: 1em 0;
+    width: 100%;
+    border: none;
+    font-size: 100%;
+    outline: none;
+    background: none;
+}
+input.title:focus,.prompt:focus{
+    border-bottom: 1px solid red;
+}
+
 .btns{
     position: -webkit-sticky;
     position: sticky;
@@ -196,21 +210,6 @@ input {
 }
 input.field.label {
     padding-top: 0;
-}
-input.field {
-    width: 100%;
-    border: none;
-    font-size: 100%;
-    padding: 0;
-    outline: none;
-    background: none;
-}
-input.title {
-    font-weight: bold;
-    border-radius: 0;
-}
-input.field:focus,.prompt:focus{
-    border-bottom: 1px solid red;
 }
 input.hidden {
     display: none;

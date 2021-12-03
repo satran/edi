@@ -4,8 +4,8 @@
   <body>
     <form id="new-form" enctype="multipart/form-data" method="POST">
       <div class="container">
-	<div class="title">
-	  <div><input class="field" type="text" placeholder="Enter file name" name="name" value="{{if .Name}}{{.Name}}{{end}}"/></div>
+	<div>
+	  <input class="title" type="text" placeholder="Enter file name" name="name" value="{{if .Name}}{{.Name}}{{end}}"/>
 	</div>
 	<div class="btns">
 {{template "default-toolbar" .}}
