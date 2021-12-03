@@ -81,6 +81,14 @@ tr,td,th {
 /* Use this if you use span-x classes on th/td. */
 table .last { padding-right: 0; } 
 
+strong {
+  font-weight: bold;
+}
+
+em {
+  font-style: italic;
+}
+
 body, textarea, input {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Open sans", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; 
 }
