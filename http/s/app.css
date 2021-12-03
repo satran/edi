@@ -31,7 +31,7 @@ footer, header, hgroup, menu, nav, section {
 }
 body {
     line-height: 1;
-    background: #fff;
+    background: #ffffff;
     color: #333;
     margin: 0;
     padding: 0;
@@ -137,7 +137,7 @@ pre code {
 }
 .title {
     padding: 1em 0;
-    background: #fff;
+    background: #ffffff;
     font-weight: bold;
     border-bottom: 1px solid #efefef;
 }
@@ -147,6 +147,7 @@ input.title {
     padding: 1em 0;
     width: 100%;
     border: none;
+    border-bottom: 1px solid #efefef;
     font-size: 100%;
     outline: none;
     background: none;
@@ -162,7 +163,7 @@ input.title:focus,.prompt:focus{
     text-align: center;
     margin: 0 auto;
     max-width: 44em;
-    background: #fff;
+    background: #ffffff;
 }
 .btns .item {
     text-decoration: none;
@@ -177,11 +178,10 @@ input.title:focus,.prompt:focus{
     margin-bottom: 3rem;
 }
 .window {
-    font-family: "SF Mono", "Inconsolata", "Segoe UI Mono", ui-monospace, Menlo, Monaco, "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
     position: fixed;
     top: 1em;
     bottom: 1em;
-    background: #fff;
+    background: #ffffff;
     border: 1px solid #ccc;
     width: 44em;
     box-shadow: 0 0 12px 0 #ccc;
@@ -251,17 +251,20 @@ textarea.editor:focus{
     max-width: 100%;
 }
 
+.shell .prompt {
+    padding: 1em 0;
+}
 .shell-output{
-    padding: 0 1em;
     white-space: pre-wrap;
-    line-height: 1.5;
+    line-height: 1.4;
+    font-family: "SF Mono", "Inconsolata", "Segoe UI Mono", ui-monospace, Menlo, Monaco, "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
+    padding-bottom: 1em;
 }
 .prompt {
     font-family: "SF Mono", "Inconsolata", "Segoe UI Mono", ui-monospace, Menlo, Monaco, "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
     width: calc(100% - 2em);
     border: none;
     font-size: 100%;
-    margin: 1em;
     outline: none;
     background: none;
     border-radius: 0;
@@ -326,9 +329,12 @@ textarea.editor:focus{
     }
 }
 @media screen and (max-width: 800px) {
-    .file {
+    .file, .shell-output {
         padding: 1em;
         margin: 0;
+    }
+    .shell .prompt {
+	padding: 1em;
     }
     .title {
         padding: 1em;

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+{{template "header" .}}
+  <body>
+    <div class="container">
+      <div class="title">Shell</div>
+      <div class="btns">
+{{template "default-toolbar" .}}
+      </div>
+
+      <div class="shell">
+	<div class="body">
+	  <div class="shell-output"></div>
+	  <input class="prompt shell" autofocus autocomplete="off" autocapitalize="off" type="text" placeholder="type command here" \>
+	</div>
+      </div>
+
+{{template "windows" .}}
+    </div>
+    <script type="text/javascript" src="/s/file.js"></script>
+    <script type="text/javascript" src="/s/shell.js"></script>
+  </body>
+</html>
