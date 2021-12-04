@@ -205,8 +205,8 @@ input.title:focus,.shell.prompt:focus{
 }
 .window.command {
     margin: 0 auto;
-    bottom: inherit;
     max-width: 33em;
+    bottom: inherit;
 }
 input.command {
     width: 100%;
@@ -311,14 +311,15 @@ textarea.editor:focus{
 	background: #000;
     }
     .window {
-	background: #000;
+	background: #222;
 	box-shadow: none;
+	border: 1px solid #444;
     }
     .window, .window .header, .window .btn{
 	border-color: #333;
     }
     .command .body a:hover {
-	background: #333;
+	background: #000;
     }
     input {
 	background: none;
@@ -360,6 +361,5 @@ textarea.editor:focus{
 	left: 1em;
 	right: 1em;
 	width: inherit;
-	border: none;
     }
 }
