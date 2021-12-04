@@ -12,8 +12,8 @@ function hideParent(ev) {
 	let parents = document.querySelectorAll(".window."+win);
 	parents.forEach(w => {
 	    w.hidden = false;
-	    let prompt = w.querySelector(".prompt");
-	    prompt.focus();
+	    let command = w.querySelector(".command");
+	    command.focus();
 	});
     }
     const windowBtns = document.querySelectorAll(".btn");
@@ -43,7 +43,7 @@ function hideParent(ev) {
         res.innerHTML = list;
     }
 
-    const openPrompt = document.querySelector(".prompt.command");
+    const openPrompt = document.querySelector(".window .command");
     let waiting = false;
     openPrompt.addEventListener("keydown", function (event) {
 	// disabling the global shortcuts to be called
