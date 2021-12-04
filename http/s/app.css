@@ -152,7 +152,7 @@ input.title {
     outline: none;
     background: none;
 }
-input.title:focus,.prompt:focus{
+input.title:focus,.shell.prompt:focus{
     border-bottom: 1px solid red;
 }
 
@@ -180,6 +180,9 @@ input.title:focus,.prompt:focus{
 .window {
     position: fixed;
     top: 1em;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
     bottom: 1em;
     background: #ffffff;
     border: 1px solid #ccc;
@@ -198,9 +201,31 @@ input.title:focus,.prompt:focus{
     padding: 1em;
 }
 .window .btn{
-    padding: 1em;
-    border-right: 1px solid #ccc;
+    padding: .5em;
 }
+.window.command {
+    margin: 0 auto;
+    bottom: inherit;
+    max-width: 33em;
+}
+input.command {
+    width: 100%;
+    background: none;
+    padding: .5em;
+    border: none;
+    font-size: 100%;
+    outline: none;
+    border-radius: 0;
+}
+.command .body a {
+    display: block;
+    padding: .5em;
+    text-decoration: none;
+}
+.command .body a:hover {
+    background: #ddd;
+}
+
 .label.right {
     text-align: right;
 }
@@ -251,34 +276,21 @@ textarea.editor:focus{
     max-width: 100%;
 }
 
-.shell .prompt {
-    padding: 1em 0;
-}
 .shell-output{
     white-space: pre-wrap;
     line-height: 1.4;
     font-family: "SF Mono", "Inconsolata", "Segoe UI Mono", ui-monospace, Menlo, Monaco, "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
     padding-bottom: 1em;
 }
-.prompt {
+.shell .prompt {
     font-family: "SF Mono", "Inconsolata", "Segoe UI Mono", ui-monospace, Menlo, Monaco, "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
+    padding: 1em 0;
     width: calc(100% - 2em);
     border: none;
     font-size: 100%;
     outline: none;
     background: none;
     border-radius: 0;
-}
-.file-list {
-    padding: 1em;
-}
-.file-list a {
-    display: block;
-    padding: .5em;
-    text-decoration: none;
-}
-.file-list a:hover {
-    border-bottom: 1px solid;
 }
 @media (prefers-color-scheme: dark) {
     body {
@@ -304,6 +316,9 @@ textarea.editor:focus{
     }
     .window, .window .header, .window .btn{
 	border-color: #333;
+    }
+    .command .body a:hover {
+	background: #333;
     }
     input {
 	background: none;
@@ -340,10 +355,10 @@ textarea.editor:focus{
         padding: 1em;
     }
     .window {
-	top: 0;
-	bottom: 0;
-	left: 0;
-	right: 0;
+	top: 1em;
+	bottom: 1em;
+	left: 1em;
+	right: 1em;
 	width: inherit;
 	border: none;
     }

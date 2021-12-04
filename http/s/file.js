@@ -31,7 +31,7 @@ function hideParent(ev) {
     }
 
     function showResults(parent, val) {
-        let res = parent.querySelector(".file-list");
+        let res = parent.querySelector(".body");
         res.innerHTML = '';
         let list = '';
         // From https://github.com/farzher/fuzzysort
@@ -43,7 +43,7 @@ function hideParent(ev) {
         res.innerHTML = list;
     }
 
-    const openPrompt = document.querySelector(".prompt.open");
+    const openPrompt = document.querySelector(".prompt.command");
     let waiting = false;
     openPrompt.addEventListener("keydown", function (event) {
 	// disabling the global shortcuts to be called
@@ -79,7 +79,8 @@ function hideParent(ev) {
 	    document.location = "/_new"
 	    break;
 	case "o":
-	    openWindow("open");
+	    ev.stopPropagation();
+	    openWindow("command");
 	    break;
 	case "s":
 	    document.location = "/_sh"
