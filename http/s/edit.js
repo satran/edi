@@ -2,11 +2,9 @@
     const editor = document.getElementById("editor");
     const tabsize = 4;
     const keymap = {
-        "<": { value: "<>", pos: 1 },
         "(": { value: "()", pos: 1 },
         "{": { value: "{}", pos: 1 },
         "[": { value: "[]", pos: 1 },
-        "'": { value: "''", pos: 1 },
         '"': { value: '""', pos: 1 },
         "“": { value: "“”", pos: 1 },
         "`": { value: "``", pos: 1 },
