@@ -1,8 +1,16 @@
 package parser
 
 import (
+	"fmt"
 	"testing"
 )
+
+func TestLexerPrint(t *testing.T) {
+	_, c := lex("test", `((embedded content "another day"))`)
+	for i := range c {
+		fmt.Println(i.typ, i)
+	}
+}
 
 func TestLexer(t *testing.T) {
 	tests := []struct {
@@ -40,6 +48,19 @@ hello world`,
 			},
 		},
 		{
+			name:    "embedded quoted arg",
+			content: `hello world ((arg1 arg2 "arg3 value"))`,
+			items: []item{
+				{itemText, "hello world "},
+				{itemLeftMeta, leftMeta},
+				{itemArg, "arg1"},
+				{itemArg, "arg2"},
+				{itemArgQuoted, "arg3 value"},
+				{itemRightMeta, rightMeta},
+				{itemEOF, ""},
+			},
+		},
+		{
 			name: "embedded multi line",
 			content: `hello world
 ((this is """a multi
@@ -49,7 +70,7 @@ line argument"""))`,
 				{itemLeftMeta, leftMeta},
 				{itemArg, "this"},
 				{itemArg, "is"},
-				{itemMultiLineArg, "a multi\nline argument"},
+				{itemArgMultiLine, "a multi\nline argument"},
 				{itemRightMeta, rightMeta},
 				{itemEOF, ""},
 			},

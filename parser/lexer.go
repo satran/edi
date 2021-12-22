@@ -17,9 +17,8 @@ const (
 	itemError itemType = iota
 	itemLeftMeta
 	itemRightMeta
-	itemLeftQuote
-	itemRightQuote
-	itemMultiLineArg
+	itemArgMultiLine
+	itemArgQuoted
 	itemArg
 	itemText
 	itemEOF
@@ -111,7 +110,7 @@ func lexMultiLine(l *lexer) stateFn {
 	l.ignore()
 	for {
 		if strings.HasPrefix(l.input[l.pos:], multiLineQuote) {
-			l.emit(itemMultiLineArg)
+			l.emit(itemArgMultiLine)
 			l.pos += len(multiLineQuote)
 			l.ignore()
 			return lexInsideAction
@@ -125,8 +124,8 @@ func lexInsideQuote(l *lexer) stateFn {
 		switch r := l.next(); {
 		case r == '"':
 			l.backup()
-			l.emit(itemArg)
-			l.pos += 2 // skip one for the backup and one for the space
+			l.emit(itemArgQuoted)
+			l.pos += 1 // skip one for the backup
 			l.ignore()
 			return lexInsideAction
 		}
@@ -171,9 +170,6 @@ func lexInsideAction(l *lexer) stateFn {
 			l.emit(itemArg)
 			l.next()
 			l.ignore()
-			//case r == '`':
-			//	return lexRawQuote
-			//
 		}
 	}
 }
