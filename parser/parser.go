@@ -1,11 +1,11 @@
 package parser
 
 import (
-	"bytes"
-	"regexp"
-	"github.com/satran/edi/exec"
+	"errors"
+	"fmt"
+	"strings"
 
-	bf "github.com/russross/blackfriday/v2"
+	"github.com/satran/edi/exec"
 )
 
 type Parser struct {
@@ -18,69 +18,112 @@ func New(dir string, name string) *Parser {
 }
 
 func (p *Parser) Parse(content string) string {
-	content = parseInternalLinks(content)
-	m := bf.New(bf.WithExtensions(bf.CommonExtensions |
-		bf.HeadingIDs |
-		bf.Footnotes |
-		bf.NoEmptyLineBeforeBlock |
-		bf.AutoHeadingIDs))
-	ast := m.Parse([]byte(content))
-	var buf bytes.Buffer
-	renderer := bf.NewHTMLRenderer(bf.HTMLRendererParameters{})
-	listDepth := 0
-	ast.Walk(func(node *bf.Node, entering bool) bf.WalkStatus {
-		var matched bool
-		switch node.Type {
-		case bf.Code:
-			if shouldEval(node.Literal) {
-				comm := bytes.TrimPrefix(node.Literal, []byte("!"))
-				buf.WriteString(exec.Run(p.root, p.filename, string(comm)))
-				matched = true
+	ret := ""
+	_, c := lex(p.filename, content)
+	var args []arg
+	for i := range c {
+		switch i.typ {
+		case itemText:
+			ret += i.val
+		case itemLeftMeta:
+			args = []arg{}
+		case itemArg:
+			args = append(args, arg{value: i.val})
+		case itemArgMultiLine:
+			args = append(args, arg{value: i.val, multiline: true})
+		case itemArgQuoted:
+			args = append(args, arg{value: i.val, quoted: true})
+		case itemRightMeta:
+			parsed, err := p.eval(args)
+			if err != nil {
+				ret += "\n" + err.Error()
+				return ret
 			}
-		case bf.CodeBlock:
-			// fenced code is only the one with ```<type>```. We want the type to be !
-			if !node.CodeBlockData.IsFenced {
-				break
-			}
-			if shouldEval(node.CodeBlockData.Info) {
-				buf.WriteString(exec.RunStdin(p.root, p.filename, node.Literal))
-				matched = true
-			}
-		case bf.List:
-			if entering {
-				listDepth++
-			} else {
-				listDepth--
-			}
-		case bf.Text:
-			if listDepth == 0 {
-				break
-			}
-			if isTask(node.Literal) {
-				matched = true
-				buf.Write(toTask(node.Literal, []byte(`<span class="task">$1</span>&nbsp;`)))
-			}
+			ret += parsed
 		}
-		if !matched {
-			renderer.RenderNode(&buf, node, entering)
-		}
-		return bf.GoToNext
-	})
-	return buf.String()
+	}
+	return ret
 }
 
-func shouldEval(content []byte) bool {
-	return bytes.HasPrefix(content, []byte("!"))
+type arg struct {
+	value     string
+	multiline bool
+	quoted    bool
 }
 
-var (
-	taskR  = regexp.MustCompile(`^\[([ a-zA-Z\?/]*)\] `)
-	isTask = taskR.Match
-	toTask = taskR.ReplaceAll
-)
+func (p *Parser) eval(args []arg) (string, error) {
+	if len(args) == 0 {
+		return "", errors.New("eval block must contain arguments")
+	}
+	if args[0].multiline {
+		return "", errors.New("function cannot be multiline")
+	}
+	fn := args[0].value
+	switch {
+	case fn == "!" || fn == "sh":
+		content, err := shell(p.root, p.filename, args[1:])
+		if err != nil {
+			return content, err
+		}
+		nested := New(p.root, p.filename)
+		return nested.Parse(content), nil
+	case fn == "i" || fn == "image":
+		if len(args) == 1 {
+			return "", errors.New(`use ((img url "optional alt text"))`)
+		}
+		return image(args[1:])
+	case len(args) == 1 && args[0].quoted:
+		return link(args[0].value)
+	}
+	return "", fmt.Errorf("unknown function: %s", fn)
+}
 
-var linkR = regexp.MustCompile(`\(\((.*)\)\)`)
+func shell(root string, filename string, args []arg) (string, error) {
+	if len(args) == 1 && args[0].multiline {
+		return exec.RunStdin(root, filename, []byte(args[0].value)), nil
+	}
+	params := ""
+	for _, a := range args {
+		if a.multiline {
+			return "", errors.New("one one multiline argument allowed")
+		}
+		if a.quoted {
+			params += fmt.Sprintf(" %q", a.value)
+		} else {
+			params += " " + a.value
+		}
 
-func parseInternalLinks(content string) string {
-	return linkR.ReplaceAllString(content, `<a href="$1">$1</a>`)
+	}
+	return exec.Run(root, filename, params), nil
+}
+
+// link takes a single quoted argument.
+// A link can be represented as url|optional string
+func link(url string) (string, error) {
+	var link, text string
+	chunks := strings.SplitN(url, "|", 2)
+	if len(chunks) == 1 {
+		link = chunks[0]
+		text = chunks[0]
+	} else if len(chunks) == 2 {
+		link = chunks[0]
+		text = chunks[1]
+	} else {
+		return "", errors.New(`use (("url[|optional text]"))`)
+	}
+	return fmt.Sprintf(`<a href="%s">%s</a>`, link, text), nil
+}
+
+func image(args []arg) (string, error) {
+	var url, alt string
+	if len(args) == 1 {
+		url = args[0].value
+		alt = url
+	} else if len(args) == 2 {
+		url = args[0].value
+		alt = args[1].value
+	} else {
+		return "", errors.New(`use ((img url "optional alt text"))`)
+	}
+	return fmt.Sprintf(`<img src="%s" alt="%s"/>`, url, alt), nil
 }
