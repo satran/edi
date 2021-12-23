@@ -15,13 +15,11 @@ type itemType int
 
 const (
 	itemError itemType = iota
-	itemLeftMeta
-	itemRightMeta
-	itemArgMultiLine
-	itemArgQuoted
-	itemArg
 	itemHeader
 	itemText
+	itemLink
+	itemCode
+	itemCodeMultiLine
 	itemEOF
 )
 
@@ -76,12 +74,15 @@ func (l *lexer) emit(t itemType) {
 
 func lexText(l *lexer) stateFn {
 	for {
-		if strings.HasPrefix(l.input[l.pos:], leftMeta) {
-			if l.pos > l.start {
-				l.emit(itemText)
-			}
-			return lexLeftMeta
+		switch {
+		case l.hasPrefix(codeMultiLineBlock):
+			l.emitWhenNotStart(itemText)
+			return lexInsideMultiLineBlock
+		case l.hasPrefix(leftLink):
+			l.emitWhenNotStart(itemText)
+			return lextLink
 		}
+
 		// generate header
 		if n := l.peek(); n == '#' {
 			if l.pos == 0 {
@@ -91,6 +92,13 @@ func lexText(l *lexer) stateFn {
 				l.emit(itemText)
 				return lexHeader
 			}
+		} else if n == '`' {
+			if l.pos != 0 {
+				l.emit(itemText)
+			}
+			l.next() // read and ignore the `
+			l.ignore()
+			return lextInsideCode
 		}
 		r := l.next()
 		if r == eof {
@@ -105,6 +113,71 @@ func lexText(l *lexer) stateFn {
 	return nil
 }
 
+func (l *lexer) hasPrefix(prefix string) bool {
+	return strings.HasPrefix(l.input[l.pos:], prefix)
+}
+
+func (l *lexer) emitWhenNotStart(t itemType) {
+	if l.pos > l.start {
+		l.emit(t)
+	}
+}
+
+func lexInsideMultiLineBlock(l *lexer) stateFn {
+	l.ignoreN(len(codeMultiLineBlock))
+	var nested bool
+	for {
+		if l.hasPrefix(codeMultiLineBlock) && !nested {
+			l.emitWhenNotStart(itemCodeMultiLine)
+			l.ignoreN(len(codeMultiLineBlock))
+			return lexText
+		}
+		switch r := l.next(); {
+		case r == eof:
+			return l.errorf("unclosed action")
+		case r == codeBlock:
+			nested = !nested
+		}
+	}
+}
+
+func lextInsideCode(l *lexer) stateFn {
+	for {
+		switch r := l.next(); {
+		case r == eof || r == '\n':
+			return l.errorf("unclosed action")
+		case r == codeBlock:
+			l.backup()
+			l.emit(itemCode)
+			l.next()
+			l.ignore()
+			return lexText
+		}
+	}
+}
+
+func lextLink(l *lexer) stateFn {
+	l.ignoreN(len(leftLink))
+	nested := 0
+	for {
+		if l.hasPrefix(rightLink) && nested == 0 {
+			l.emitWhenNotStart(itemLink)
+			l.ignoreN(len(rightLink))
+			return lexText
+		}
+		switch r := l.next(); {
+		case r == eof || r == '\n':
+			return l.errorf("unclosed action")
+		case r == '[':
+			nested++
+		case r == ']':
+			if nested > 0 {
+				nested--
+			}
+		}
+	}
+}
+
 func lexHeader(l *lexer) stateFn {
 	for {
 		r := l.next()
@@ -112,84 +185,6 @@ func lexHeader(l *lexer) stateFn {
 			l.backup()
 			l.emit(itemHeader)
 			return lexText
-		}
-	}
-}
-
-func lexLeftMeta(l *lexer) stateFn {
-	l.pos += len(leftMeta)
-	l.emit(itemLeftMeta)
-	return lexInsideAction // Now inside (( ))
-}
-
-func lexRightMeta(l *lexer) stateFn {
-	l.pos += len(rightMeta)
-	l.emit(itemRightMeta)
-	return lexText
-}
-
-func lexMultiLine(l *lexer) stateFn {
-	l.pos += len(multiLineQuote)
-	l.ignore()
-	for {
-		if strings.HasPrefix(l.input[l.pos:], multiLineQuote) {
-			l.emit(itemArgMultiLine)
-			l.pos += len(multiLineQuote)
-			l.ignore()
-			return lexInsideAction
-		}
-		l.next()
-	}
-}
-
-func lexInsideQuote(l *lexer) stateFn {
-	for {
-		switch r := l.next(); {
-		case r == '"':
-			l.backup()
-			l.emit(itemArgQuoted)
-			l.pos += 1 // skip one for the backup
-			l.ignore()
-			return lexInsideAction
-		}
-	}
-}
-
-func lexInsideAction(l *lexer) stateFn {
-	// Either number, quoted string, or identifier.
-	// Spaces separate and are ignored.
-	// Pipe symbols separate and are emitted.
-	nested := 0
-	for {
-		if strings.HasPrefix(l.input[l.pos:], rightMeta) && nested == 0 {
-			if l.pos > l.start {
-				l.emit(itemArg)
-			}
-			return lexRightMeta
-		}
-		if strings.HasPrefix(l.input[l.pos:], multiLineQuote) {
-			if l.pos > l.start {
-				l.emit(itemArg)
-			}
-			return lexMultiLine
-		}
-		switch r := l.next(); {
-		case r == eof || r == '\n':
-			return l.errorf("unclosed action")
-		case r == '"':
-			l.ignore()
-			return lexInsideQuote
-		case r == ' ' && nested == 0:
-			l.backup()
-			l.emit(itemArg)
-			l.next()
-			l.ignore()
-		case r == '(':
-			nested++
-		case r == ')':
-			if nested > 0 {
-				nested--
-			}
 		}
 	}
 }
@@ -207,6 +202,11 @@ func (l *lexer) next() (r rune) {
 
 // ignore skips over the pending input before this point.
 func (l *lexer) ignore() {
+	l.start = l.pos
+}
+
+func (l *lexer) ignoreN(n int) {
+	l.pos += n
 	l.start = l.pos
 }
 
@@ -236,9 +236,9 @@ func (l *lexer) errorf(format string, args ...interface{}) stateFn {
 }
 
 const (
-	eof            = 0
-	leftMeta       = "(("
-	rightMeta      = "))"
-	quote          = `"`
-	multiLineQuote = `"""`
+	eof                = 0
+	codeBlock          = '`'
+	codeMultiLineBlock = "```"
+	leftLink           = "[["
+	rightLink          = "]]"
 )

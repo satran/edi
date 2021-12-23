@@ -23,24 +23,44 @@ func TestParse(t *testing.T) {
 		},
 		{
 			Name: "code eval",
-			In:   "((! printf hello))",
+			In:   "`printf hello`",
 			Out:  `hello`,
 		},
 		{
 			Name: "code eval with text",
-			In:   "((! printf hello)) world",
+			In:   "`printf hello` world",
 			Out:  `hello world`,
 		},
 		{
 			Name: "block code eval",
-			In: `((! """
-printf hello | tr 'a-z' 'A-Z'"""))`,
-			Out: `HELLO`,
+			In:   "```echo hello\nprintf hello | tr 'a-z' 'A-Z'```",
+			Out: `hello
+HELLO`,
 		},
 		{
 			Name: "filename-env",
-			In:   "((! printf $FILE))",
+			In:   "`printf $FILE`",
 			Out:  `filename-env`,
+		},
+		{
+			Name: "simple link",
+			In:   "[[http://wikipedia.org]]",
+			Out:  `<a href="http://wikipedia.org">http://wikipedia.org</a>`,
+		},
+		{
+			Name: "link with description",
+			In:   "[[http://wikipedia.org|Wikipedia]]",
+			Out:  `<a href="http://wikipedia.org">Wikipedia</a>`,
+		},
+		{
+			Name: "simple image",
+			In:   "[[!example.png]]",
+			Out:  `<img src="example.png" />`,
+		},
+		{
+			Name: "image with description",
+			In:   "[[!example.png|example image]]",
+			Out:  `<img src="example.png" alt="example image" />`,
 		},
 	}
 
