@@ -132,22 +132,13 @@ func lexInsideQuote(l *lexer) stateFn {
 	}
 }
 
-func lexArg(l *lexer) stateFn {
-	for {
-		switch r := l.next(); {
-		case r == ' ':
-			l.emit(itemArg)
-			return lexInsideAction
-		}
-	}
-}
-
 func lexInsideAction(l *lexer) stateFn {
 	// Either number, quoted string, or identifier.
 	// Spaces separate and are ignored.
 	// Pipe symbols separate and are emitted.
+	nested := 0
 	for {
-		if strings.HasPrefix(l.input[l.pos:], rightMeta) {
+		if strings.HasPrefix(l.input[l.pos:], rightMeta) && nested == 0 {
 			if l.pos > l.start {
 				l.emit(itemArg)
 			}
@@ -165,11 +156,17 @@ func lexInsideAction(l *lexer) stateFn {
 		case r == '"':
 			l.ignore()
 			return lexInsideQuote
-		case r == ' ':
+		case r == ' ' && nested == 0:
 			l.backup()
 			l.emit(itemArg)
 			l.next()
 			l.ignore()
+		case r == '(':
+			nested++
+		case r == ')':
+			if nested > 0 {
+				nested--
+			}
 		}
 	}
 }

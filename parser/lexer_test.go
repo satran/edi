@@ -1,16 +1,8 @@
 package parser
 
 import (
-	"fmt"
 	"testing"
 )
-
-func TestLexerPrint(t *testing.T) {
-	_, c := lex("test", `((embedded content "another day"))`)
-	for i := range c {
-		fmt.Println(i.typ, i)
-	}
-}
 
 func TestLexer(t *testing.T) {
 	tests := []struct {
@@ -71,6 +63,17 @@ line argument"""))`,
 				{itemArg, "this"},
 				{itemArg, "is"},
 				{itemArgMultiLine, "a multi\nline argument"},
+				{itemRightMeta, rightMeta},
+				{itemEOF, ""},
+			},
+		},
+		{
+			name:    "embedded nested",
+			content: `((sh $(date)))`,
+			items: []item{
+				{itemLeftMeta, leftMeta},
+				{itemArg, "sh"},
+				{itemArg, "$(date)"},
 				{itemRightMeta, rightMeta},
 				{itemEOF, ""},
 			},
