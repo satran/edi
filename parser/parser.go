@@ -26,11 +26,9 @@ func (p *Parser) Parse(content string) string {
 		case itemHeader:
 			ret += fmt.Sprintf("<strong>%s</strong>", i.val)
 		case itemCode:
-			nested := New(p.root, p.filename)
-			ret += nested.Parse(exec.Run(p.root, p.filename, i.val))
+			ret += p.shell(false, i.val)
 		case itemCodeMultiLine:
-			nested := New(p.root, p.filename)
-			ret += nested.Parse(exec.RunStdin(p.root, p.filename, []byte(i.val)))
+			ret += p.shell(true, i.val)
 		case itemLink:
 			var url, opt string
 			chunks := strings.SplitN(i.val, "|", 2)
@@ -53,6 +51,17 @@ func (p *Parser) Parse(content string) string {
 		}
 	}
 	return ret
+}
+
+func (p *Parser) shell(stdin bool, content string) (ret string) {
+	if stdin {
+		ret = exec.RunStdin(p.root, p.filename, []byte(content))
+	} else {
+		ret = exec.Run(p.root, p.filename, content)
+	}
+	ret = strings.TrimSuffix(ret, "\n")
+	nested := New(p.root, p.filename)
+	return nested.Parse(ret)
 }
 
 func isImageLink(link string) bool {
