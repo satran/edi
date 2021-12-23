@@ -19,6 +19,26 @@ func TestLexer(t *testing.T) {
 			},
 		},
 		{
+			name:    "header",
+			content: `# hello world`,
+			items: []item{
+				{itemHeader, "# hello world"},
+				{itemEOF, ""},
+			},
+		},
+		{
+			name: "header multiline",
+			content: `a new line
+# hello world
+this is a test`,
+			items: []item{
+				{itemText, "a new line\n"},
+				{itemHeader, "# hello world"},
+				{itemText, "\nthis is a test"},
+				{itemEOF, ""},
+			},
+		},
+		{
 			name: "simple new line",
 			content: `
 hello world`,

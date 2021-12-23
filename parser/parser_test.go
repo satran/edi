@@ -19,7 +19,7 @@ func TestParse(t *testing.T) {
 		{
 			Name: "heading",
 			In:   `# hello`,
-			Out:  `# hello`,
+			Out:  `<strong># hello</strong>`,
 		},
 		{
 			Name: "code eval",

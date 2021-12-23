@@ -40,6 +40,8 @@ func (p *Parser) Parse(content string) string {
 				return ret
 			}
 			ret += parsed
+		case itemHeader:
+			ret += fmt.Sprintf("<strong>%s</strong>", i.val)
 		}
 	}
 	return ret

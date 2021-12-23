@@ -20,6 +20,7 @@ const (
 	itemArgMultiLine
 	itemArgQuoted
 	itemArg
+	itemHeader
 	itemText
 	itemEOF
 )
@@ -79,9 +80,20 @@ func lexText(l *lexer) stateFn {
 			if l.pos > l.start {
 				l.emit(itemText)
 			}
-			return lexLeftMeta // Next state.
+			return lexLeftMeta
 		}
-		if r := l.next(); r == eof {
+		// generate header
+		if n := l.peek(); n == '#' {
+			if l.pos == 0 {
+				return lexHeader
+			}
+			if l.input[l.pos-1] == '\n' {
+				l.emit(itemText)
+				return lexHeader
+			}
+		}
+		r := l.next()
+		if r == eof {
 			break
 		}
 	}
@@ -90,7 +102,18 @@ func lexText(l *lexer) stateFn {
 		l.emit(itemText)
 	}
 	l.emit(itemEOF) // Useful to make EOF a token.
-	return nil      // Stop the run loop.
+	return nil
+}
+
+func lexHeader(l *lexer) stateFn {
+	for {
+		r := l.next()
+		if r == '\n' || r == eof {
+			l.backup()
+			l.emit(itemHeader)
+			return lexText
+		}
+	}
 }
 
 func lexLeftMeta(l *lexer) stateFn {
