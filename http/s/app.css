@@ -295,10 +295,10 @@ textarea.editor:focus{
 @media (prefers-color-scheme: dark) {
     body {
         background: #000;
-        color: #ddd;
+        color: #ccc;
     }
     a {
-        color: #ddd;
+        color: #ccc;
     }
     code {
 	background-color: #222;
@@ -323,11 +323,11 @@ textarea.editor:focus{
     }
     input {
 	background: none;
-	color: #ddd;
+	color: #ccc;
     }
     textarea.editor {
 	background: #000;
-	color: #ddd;
+	color: #ccc;
     }
     th,td {
 	border-color: #333;
