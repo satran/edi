@@ -19,32 +19,28 @@ func TestParse(t *testing.T) {
 		{
 			Name: "heading",
 			In:   `# hello`,
-			Out:  `<h1 id="hello">hello</h1>`,
+			Out:  `# hello`,
 		},
 		{
 			Name: "code eval",
-			In:   "`!printf hello`",
-			Out:  `<p>hello</p>`,
+			In:   "((! printf hello))",
+			Out:  `hello`,
+		},
+		{
+			Name: "code eval with text",
+			In:   "((! printf hello)) world",
+			Out:  `hello world`,
 		},
 		{
 			Name: "block code eval",
-			In:   "```!\n printf hello | tr 'a-z' 'A-Z'```",
-			Out:  `<p>HELLO</p>`,
+			In: `((! """
+printf hello | tr 'a-z' 'A-Z'"""))`,
+			Out: `HELLO`,
 		},
 		{
 			Name: "filename-env",
-			In:   "`!printf $FILE`",
-			Out:  `<p>filename-env</p>`,
-		},
-		{
-			Name: "code no eval",
-			In:   "`printf hello`",
-			Out:  `<p><code>printf hello</code></p>`,
-		},
-		{
-			Name: "block no code eval",
-			In:   "```\n printf hello | tr 'a-z' 'A-Z'```",
-			Out:  "<p><code>\n printf hello | tr 'a-z' 'A-Z'</code></p>",
+			In:   "((! printf $FILE))",
+			Out:  `filename-env`,
 		},
 	}
 
