@@ -165,7 +165,7 @@
             formdata.append("file", file);
             fetch("/_new", {method: "POST", body: formdata})
                 .then(data => {
-                    editor.insertText('!['+file.name+']('+ file.name +')');
+                    editor.insertText('[[!'+file.name+']]');
                 })
                 .catch((error) => {
                     console.log("err:", error);

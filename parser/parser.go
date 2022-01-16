@@ -1,11 +1,10 @@
 package parser
 
 import (
-	"bytes"
-	"regexp"
-	"github.com/satran/edi/exec"
+	"fmt"
+	"strings"
 
-	bf "github.com/russross/blackfriday/v2"
+	"github.com/satran/edi/exec"
 )
 
 type Parser struct {
@@ -18,69 +17,53 @@ func New(dir string, name string) *Parser {
 }
 
 func (p *Parser) Parse(content string) string {
-	content = parseInternalLinks(content)
-	m := bf.New(bf.WithExtensions(bf.CommonExtensions |
-		bf.HeadingIDs |
-		bf.Footnotes |
-		bf.NoEmptyLineBeforeBlock |
-		bf.AutoHeadingIDs))
-	ast := m.Parse([]byte(content))
-	var buf bytes.Buffer
-	renderer := bf.NewHTMLRenderer(bf.HTMLRendererParameters{})
-	listDepth := 0
-	ast.Walk(func(node *bf.Node, entering bool) bf.WalkStatus {
-		var matched bool
-		switch node.Type {
-		case bf.Code:
-			if shouldEval(node.Literal) {
-				comm := bytes.TrimPrefix(node.Literal, []byte("!"))
-				buf.WriteString(exec.Run(p.root, p.filename, string(comm)))
-				matched = true
+	ret := ""
+	_, c := lex(p.filename, content)
+	for i := range c {
+		switch i.typ {
+		case itemText:
+			ret += i.val
+		case itemHeader:
+			ret += fmt.Sprintf("<strong>%s</strong>", i.val)
+		case itemCode:
+			ret += p.shell(false, i.val)
+		case itemCodeMultiLine:
+			ret += p.shell(true, i.val)
+		case itemLink:
+			var url, opt string
+			chunks := strings.SplitN(i.val, "|", 2)
+			url = chunks[0]
+			opt = chunks[0]
+			if len(chunks) == 2 {
+				opt = chunks[1]
 			}
-		case bf.CodeBlock:
-			// fenced code is only the one with ```<type>```. We want the type to be !
-			if !node.CodeBlockData.IsFenced {
-				break
-			}
-			if shouldEval(node.CodeBlockData.Info) {
-				buf.WriteString(exec.RunStdin(p.root, p.filename, node.Literal))
-				matched = true
-			}
-		case bf.List:
-			if entering {
-				listDepth++
+			if isImageLink(url) {
+				url = url[1:]
+				if len(chunks) == 1 {
+					ret += fmt.Sprintf(`<img src="%s" />`, url)
+				} else {
+					ret += fmt.Sprintf(`<img src="%s" alt="%s" />`, url, opt)
+				}
+
 			} else {
-				listDepth--
-			}
-		case bf.Text:
-			if listDepth == 0 {
-				break
-			}
-			if isTask(node.Literal) {
-				matched = true
-				buf.Write(toTask(node.Literal, []byte(`<span class="task">$1</span>&nbsp;`)))
+				ret += fmt.Sprintf(`<a href="%s">%s</a>`, url, opt)
 			}
 		}
-		if !matched {
-			renderer.RenderNode(&buf, node, entering)
-		}
-		return bf.GoToNext
-	})
-	return buf.String()
+	}
+	return ret
 }
 
-func shouldEval(content []byte) bool {
-	return bytes.HasPrefix(content, []byte("!"))
+func (p *Parser) shell(stdin bool, content string) (ret string) {
+	if stdin {
+		ret = exec.RunStdin(p.root, p.filename, []byte(content))
+	} else {
+		ret = exec.Run(p.root, p.filename, content)
+	}
+	ret = strings.TrimSuffix(ret, "\n")
+	nested := New(p.root, p.filename)
+	return nested.Parse(ret)
 }
 
-var (
-	taskR  = regexp.MustCompile(`^\[([ a-zA-Z\?/]*)\] `)
-	isTask = taskR.Match
-	toTask = taskR.ReplaceAll
-)
-
-var linkR = regexp.MustCompile(`\(\((.*)\)\)`)
-
-func parseInternalLinks(content string) string {
-	return linkR.ReplaceAllString(content, `<a href="$1">$1</a>`)
+func isImageLink(link string) bool {
+	return strings.HasPrefix(link, "!")
 }

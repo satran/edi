@@ -20,25 +20,21 @@ If you have the executable in the PATH directory you can start the server by
 edi-http -addr "localhost:8080" -dir ~/docs 
 ```
 
-## Markdown
-Edi parses markdown with a few special tricks. 
+## Syntax
+Edi has a custom syntax, some inspirations from markdown and creole.
 
-- All tasks are rendered a bit more nicely. 
-  So a `- [ ]` shows up as a block. A `- [s]` is also rendered. This is useful if you would like to make stages of your tasks.
+- Heading: A `# ` can signify heading much like Markdown heading but it doesn't create a h1 tag. Rather it makes the line bold.
 
-- Code blocks can be evaluated.
-  When you define an inline code using `` `!echo "hello world"` `` it runs the command `echo "hello world"` in a shell.
-  
-  Simarly a code fence 
+- Code Block: The main feature of edi is that you can evaluate a block of text as a shell script. There are two ways to do it. One is to use a inline block. For example ``date`` will evaluate date and replace text with the current date. A multiline code block can be used when you want to write a long script. This is passed as stdin to the shell environment to be evaluated. A multiline code is passed on as a code fence:
+````
+   ```
+   echo "hello world"
+   echo "new line"
+   ```
+````
+This would add "hello world" and "new line" to the text.
 
- ````
-    ```!
-    var="a variable"
-    echo $var
-    ```
- ````
+- Links: Links can be created using `[[url|optional description]]`
 
-  will also be evaluated in a shell. Both use `!` as a signifier to evaluate the code. The output of both will not be parsed further and thus you can have these generating HTML.
+- Images: Images follow links with a `!`: `[[!image url|optional alt text]]`
 
-- Internal links can be type using `(())`
-  So `((Edi Start))` will generate `<a href="Edi Start">Edi Start</a>`.

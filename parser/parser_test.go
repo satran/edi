@@ -19,77 +19,54 @@ func TestParse(t *testing.T) {
 		{
 			Name: "heading",
 			In:   `# hello`,
-			Out:  `<h1 id="hello">hello</h1>`,
+			Out:  `<strong># hello</strong>`,
 		},
 		{
 			Name: "code eval",
-			In:   "`!printf hello`",
-			Out:  `<p>hello</p>`,
+			In:   "`printf hello`",
+			Out:  `hello`,
+		},
+		{
+			Name: "code eval with text",
+			In:   "`printf hello` world",
+			Out:  `hello world`,
 		},
 		{
 			Name: "block code eval",
-			In:   "```!\n printf hello | tr 'a-z' 'A-Z'```",
-			Out:  `<p>HELLO</p>`,
+			In:   "```echo hello\nprintf hello | tr 'a-z' 'A-Z'```",
+			Out: `hello
+HELLO`,
 		},
 		{
 			Name: "filename-env",
-			In:   "`!printf $FILE`",
-			Out:  `<p>filename-env</p>`,
+			In:   "`printf $FILE`",
+			Out:  `filename-env`,
 		},
 		{
-			Name: "code no eval",
-			In:   "`printf hello`",
-			Out:  `<p><code>printf hello</code></p>`,
+			Name: "simple link",
+			In:   "[[http://wikipedia.org]]",
+			Out:  `<a href="http://wikipedia.org">http://wikipedia.org</a>`,
 		},
 		{
-			Name: "block no code eval",
-			In:   "```\n printf hello | tr 'a-z' 'A-Z'```",
-			Out:  "<p><code>\n printf hello | tr 'a-z' 'A-Z'</code></p>",
+			Name: "link with description",
+			In:   "[[http://wikipedia.org|Wikipedia]]",
+			Out:  `<a href="http://wikipedia.org">Wikipedia</a>`,
+		},
+		{
+			Name: "simple image",
+			In:   "[[!example.png]]",
+			Out:  `<img src="example.png" />`,
+		},
+		{
+			Name: "image with description",
+			In:   "[[!example.png|example image]]",
+			Out:  `<img src="example.png" alt="example image" />`,
 		},
 	}
 
 	for _, test := range tests {
 		p := New(".", test.Name)
 		if got := strings.TrimSuffix(p.Parse(test.In), "\n"); got != test.Out {
-			t.Errorf("failed %s\nexpected: \n%q\ngot: \n%q", test.Name, test.Out, got)
-		}
-	}
-}
-
-func TestParseInternalLinks(t *testing.T) {
-	tests := []struct {
-		Name string
-		In   string
-		Out  string
-	}{
-		{
-			Name: "empty",
-			In:   ``,
-			Out:  ``,
-		},
-		{
-			Name: "normal",
-			In:   `hello world, this is a ((link)) to a file`,
-			Out:  `hello world, this is a <a href="link">link</a> to a file`,
-		},
-		{
-			Name: "nested no parse",
-			In:   `Would this (nested (file (work)))`,
-			Out:  `Would this (nested (file (work)))`,
-		},
-		{
-			Name: "nested",
-			In:   `this should create a (nested (link \((file)))`,
-			Out:  `this should create a (nested (link \<a href="file)">file)</a>`,
-		},
-		{
-			Name: "special characters",
-			In:   `((hello-world with space %?))`,
-			Out:  `<a href="hello-world with space %?">hello-world with space %?</a>`,
-		},
-	}
-	for _, test := range tests {
-		if got := strings.TrimSuffix(parseInternalLinks(test.In), "\n"); got != test.Out {
 			t.Errorf("failed %s\nexpected: \n%q\ngot: \n%q", test.Name, test.Out, got)
 		}
 	}
