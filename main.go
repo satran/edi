@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-	static := flag.String("static", "", "Render static files from folder")
 	docDir := flag.String("dir", "", "directory that stores the data, defaults to $HOME/notes")
 	addr := flag.String("addr", "127.0.0.1:8080", "addr and port to serve from")
 	basic := flag.Bool("basic", false, "enable Basic Authentication, requires you to set USERNAME and PASSWORD environment variables")
@@ -32,7 +31,6 @@ func main() {
 		http.WithStartFile(*start),
 		http.WithServerAddr(*addr),
 		http.WithBasicAuth(username, password),
-		http.WithStaticDir(*static),
 	)
 	if err != nil {
 		log.Fatal(err)

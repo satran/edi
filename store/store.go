@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/satran/edi/parser"
 )
@@ -37,6 +36,11 @@ func (s *Store) List() ([]string, error) {
 }
 
 func (s *Store) Get(name string) (*File, error) {
+	ext := filepath.Ext(name)
+	if ext == "" {
+		// Assume all extension-less files are the txt files
+		name = name + ".txt"
+	}
 	f, err := os.OpenFile(s.Path(name), os.O_RDONLY, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("open file %q: %w", name, err)
@@ -74,8 +78,13 @@ func fileContentType(r io.ReadSeeker) (string, error) {
 }
 
 func (s *Store) Write(name string, r io.Reader) error {
+	ext := filepath.Ext(name)
+	if ext == "" {
+		// Assume all extension-less files are the txt files
+		name = name + ".txt"
+	}
 	var mode fs.FileMode = 0600
-	if strings.HasSuffix(name, ".sh") {
+	if ext == "sh" {
 		mode = 0700
 	}
 	path := s.Path(name)
@@ -97,6 +106,10 @@ func (s *Store) Index() string {
 
 func (s *Store) Path(name string) string {
 	return filepath.Join(s.Root, name)
+}
+
+func (s *Store) PathTxt(name string) string {
+	return filepath.Join(s.Root, name+".txt") // .txt is used so that editors that don't support text files without an extension also works.
 }
 
 func (s *Store) objpath() string {

@@ -163,9 +163,9 @@
             let formdata = new FormData();
             formdata.append("name", file.name);
             formdata.append("file", file);
-            fetch("/_new", {method: "POST", body: formdata})
+            fetch("/_add/", {method: "POST", body: formdata})
                 .then(data => {
-                    editor.insertText('[[!'+file.name+']]');
+                    editor.insertText('[[!/_blob/'+file.name+']]');
                 })
                 .catch((error) => {
                     console.log("err:", error);

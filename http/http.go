@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -15,102 +16,27 @@ import (
 	"github.com/satran/edi/store"
 )
 
-func handler(s *store.Store, tmpls *template.Template) http.HandlerFunc {
-	get := fileGetHandler(s, tmpls)
-	new_ := newFileHandler(s, tmpls)
-	list := listFilesHandler(s)
-	edit := editHandler(s, tmpls, "/edit/")
-	update := fileWriteHandler(s, "/edit/")
-	write := fileWriteHandler(s, "/_new")
-	shell := shellHandler(s, tmpls)
-
+func getH(s *store.Store, tmpls *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		wr := &ResponseWriter{ResponseWriter: w}
-		switch {
-		case r.URL.Path == "/":
+		if r.URL.Path == "/" {
 			if shouldReject(w, r, http.MethodGet) {
 				return
 			}
 			http.Redirect(w, r, "/"+s.Index(), http.StatusTemporaryRedirect)
-
-		case r.URL.Path == "/_sh":
-			shell(wr, r)
-
-		case r.URL.Path == "/_new":
-			switch r.Method {
-			case http.MethodGet:
-				new_(wr, r)
-			case http.MethodPost:
-				write(wr, r)
-			}
-
-		case r.URL.Path == "/_ls":
-			switch r.Method {
-			case http.MethodGet:
-				list(wr, r)
-			}
-
-		case strings.HasPrefix(r.URL.Path, "/edit"):
-			switch r.Method {
-			case http.MethodGet:
-				edit(wr, r)
-			case http.MethodPost:
-				update(wr, r)
-			}
-		default:
-			switch r.Method {
-			case http.MethodGet:
-				get(wr, r)
-			case http.MethodPost:
-				write(wr, r)
-			}
-		}
-		since := time.Since(start)
-		log.Println(since, wr.StatusCode(), r.Method, r.URL)
-	}
-}
-
-func newFileHandler(s *store.Store, tmpls *template.Template) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := tmpls.ExecuteTemplate(w, "edit.html", nil); err != nil {
-			log.Printf("executing list template: %s", err)
-			writeError(w, http.StatusInternalServerError)
 			return
 		}
-	}
-}
-
-func editHandler(s *store.Store, tmpls *template.Template, path string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		name := r.URL.Path[len(path):]
-		file, err := s.Get(name)
-		if err != nil {
-			// File doesn't exist, let's render a template with the name
-			file = store.Dummy(s.Root, name)
-		}
-		if err := tmpls.ExecuteTemplate(w, "edit.html", file); err != nil {
-			log.Printf("executing list template: %s", err)
-			writeError(w, http.StatusInternalServerError)
-			return
-		}
-	}
-}
-
-func fileGetHandler(s *store.Store, tmpls *template.Template) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
 		name := strings.TrimLeft(r.URL.Path, "/")
 		if name == "" {
 			writeError(w, http.StatusNotFound)
 			return
 		}
+
 		f, err := s.Get(name)
 		if err != nil {
 			// File doesn't exist, let's render a template with the name
 			f = store.Dummy(s.Root, name)
 		}
-		defer f.Close()
-		if f.Type == "text/plain" {
+		if f.IsText() {
 			if err := tmpls.ExecuteTemplate(w, "file.html", f); err != nil {
 				log.Printf("executing file template: %s", err)
 				writeError(w, http.StatusInternalServerError)
@@ -118,6 +44,88 @@ func fileGetHandler(s *store.Store, tmpls *template.Template) http.HandlerFunc {
 			}
 		} else {
 			http.ServeFile(w, r, s.Path(name))
+		}
+	}
+
+}
+
+const blobDir = "_blob"
+
+func getBlobH(s *store.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		name := strings.TrimLeft(r.URL.Path, "/")
+		http.ServeFile(w, r, s.Path(name))
+	}
+}
+
+func addBlobH(s *store.Store, path string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseMultipartForm(10 << 20); err != nil { //10 MB
+			log.Printf("couldn't parse form: %s", err)
+			writeError(w, http.StatusBadRequest)
+			return
+		}
+		var rdr io.Reader
+		name := r.URL.Path[len(path):]
+		file, meta, err := r.FormFile("file")
+		if err != nil {
+			log.Printf("Error Retrieving the File from form: %s", err)
+			writeError(w, http.StatusBadRequest)
+			return
+		}
+		defer file.Close()
+		if name == "" {
+			name = meta.Filename
+		}
+		rdr = file
+		if name == "" {
+			http.Error(w, "File not found", http.StatusNotFound)
+			return
+		}
+		name = filepath.Join(blobDir, name)
+		if err := s.Write(name, rdr); err != nil {
+			log.Printf("creating file: %s", err)
+			writeError(w, http.StatusBadRequest)
+			return
+		}
+		http.Redirect(w, r, "/"+name, http.StatusSeeOther)
+	}
+}
+
+func editH(s *store.Store, tmpls *template.Template, path string) http.HandlerFunc {
+	update := fileWriteHandler(s, path)
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			name := r.URL.Path[len(path):]
+			file, err := s.Get(name)
+			if err != nil {
+				// File doesn't exist, let's render a template with the name
+				file = store.Dummy(s.Root, name)
+			}
+			if err := tmpls.ExecuteTemplate(w, "edit.html", file); err != nil {
+				log.Printf("executing list template: %s", err)
+				writeError(w, http.StatusInternalServerError)
+				return
+			}
+		case http.MethodPost:
+			update(w, r)
+		}
+	}
+}
+
+func newH(s *store.Store, tmpls *template.Template, path string) http.HandlerFunc {
+	newHandler := fileWriteHandler(s, path)
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			if err := tmpls.ExecuteTemplate(w, "edit.html", nil); err != nil {
+				log.Printf("executing list template: %s", err)
+				writeError(w, http.StatusInternalServerError)
+				return
+			}
+		case http.MethodPost:
+			newHandler(w, r)
 		}
 	}
 }
@@ -132,30 +140,17 @@ func fileWriteHandler(s *store.Store, path string) http.HandlerFunc {
 		var rdr io.Reader
 		name := r.URL.Path[len(path):]
 		text := r.PostForm.Get("text")
-		if text != "" {
-			if name == "" {
-				name = r.PostForm.Get("name")
-			}
-			// This causes scripts to act randomly. awk fails not understanding a \r
-			text = strings.ReplaceAll(text, "\r", "")
-			rdr = strings.NewReader(text)
-		} else {
-			file, meta, err := r.FormFile("file")
-			if err != nil {
-				log.Printf("Error Retrieving the File from form: %s", err)
-				writeError(w, http.StatusBadRequest)
-				return
-			}
-			defer file.Close()
-			if name == "" {
-				name = meta.Filename
-			}
-			rdr = file
+		if name == "" {
+			name = r.PostForm.Get("name")
 		}
 		if name == "" {
 			http.Error(w, "File not found", http.StatusNotFound)
 			return
 		}
+
+		// This causes scripts to act randomly. awk fails not understanding a \r
+		text = strings.ReplaceAll(text, "\r", "")
+		rdr = strings.NewReader(text)
 		if err := s.Write(name, rdr); err != nil {
 			log.Printf("creating file: %s", err)
 			writeError(w, http.StatusBadRequest)
@@ -165,22 +160,7 @@ func fileWriteHandler(s *store.Store, path string) http.HandlerFunc {
 	}
 }
 
-func listFilesHandler(s *store.Store) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		files, err := s.List()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		if err := json.NewEncoder(w).Encode(&files); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		return
-	}
-}
-
-func shellHandler(s *store.Store, tmpls *template.Template) http.HandlerFunc {
+func shellH(s *store.Store, tmpls *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			if err := tmpls.ExecuteTemplate(w, "shell.html", nil); err != nil {
@@ -214,6 +194,7 @@ func basicAuth(next http.Handler, username string, password string) http.Handler
 		if !ok {
 			w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
 		}
 
 		usernameHash := sha256.Sum256([]byte(reqUsername))
@@ -228,7 +209,7 @@ func basicAuth(next http.Handler, username string, password string) http.Handler
 			next.ServeHTTP(w, r)
 			return
 		}
-
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 	})
 }
 
@@ -242,6 +223,16 @@ func shouldReject(w http.ResponseWriter, r *http.Request, method string) bool {
 
 func writeError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
+}
+
+func logRequest(fn http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		wr := &ResponseWriter{ResponseWriter: w}
+		fn(wr, r)
+		since := time.Since(start)
+		log.Println(since, wr.StatusCode(), r.Method, r.URL)
+	}
 }
 
 // ResponseWriter is a wrapper for http.ResponseWriter to get the written http status code
