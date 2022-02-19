@@ -77,12 +77,12 @@ func Server(opts ...Opts) (*http.Server, error) {
 	srv := &http.Server{Addr: o.addr}
 
 	http.Handle("/_s/", http.FileServer(http.FS(contents)))
-	http.Handle("/_edit/", basicAuth(editH(s, tmpls, "/_edit/"), o.username, o.password))
-	http.Handle("/_new", basicAuth(newH(s, tmpls, "/_new"), o.username, o.password))
-	http.Handle("/_add/", basicAuth(addBlobH(s, "/_add/"), o.username, o.password))
-	http.Handle("/_blob/", getBlobH(s))
-	http.Handle("/_sh/", basicAuth(shellH(s, tmpls), o.username, o.password))
-	http.Handle("/", getH(s, tmpls))
+	http.Handle("/_edit/", logRequest(basicAuth(editH(s, tmpls, "/_edit/"), o.username, o.password)))
+	http.Handle("/_new", logRequest(basicAuth(newH(s, tmpls, "/_new"), o.username, o.password)))
+	http.Handle("/_add/", logRequest(basicAuth(addBlobH(s, "/_add/"), o.username, o.password)))
+	http.Handle("/_blob/", logRequest(getBlobH(s)))
+	http.Handle("/_sh/", logRequest(basicAuth(shellH(s, tmpls), o.username, o.password)))
+	http.Handle("/", logRequest(getH(s, tmpls)))
 
 	return srv, nil
 }

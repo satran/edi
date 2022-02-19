@@ -13,6 +13,8 @@ import (
 	"github.com/satran/edi/parser"
 )
 
+var fileExt = ".md"
+
 type Store struct {
 	Root      string
 	startFile string
@@ -39,7 +41,7 @@ func (s *Store) Get(name string) (*File, error) {
 	ext := filepath.Ext(name)
 	if ext == "" {
 		// Assume all extension-less files are the txt files
-		name = name + ".txt"
+		name = name + fileExt
 	}
 	f, err := os.OpenFile(s.Path(name), os.O_RDONLY, 0600)
 	if err != nil {
@@ -81,7 +83,7 @@ func (s *Store) Write(name string, r io.Reader) error {
 	ext := filepath.Ext(name)
 	if ext == "" {
 		// Assume all extension-less files are the txt files
-		name = name + ".txt"
+		name = name + fileExt
 	}
 	var mode fs.FileMode = 0600
 	if ext == "sh" {
@@ -109,7 +111,7 @@ func (s *Store) Path(name string) string {
 }
 
 func (s *Store) PathTxt(name string) string {
-	return filepath.Join(s.Root, name+".txt") // .txt is used so that editors that don't support text files without an extension also works.
+	return filepath.Join(s.Root, name+fileExt) // .txt is used so that editors that don't support text files without an extension also works.
 }
 
 func (s *Store) objpath() string {
