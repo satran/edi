@@ -13,7 +13,7 @@ import (
 	"github.com/satran/edi/parser"
 )
 
-var fileExt = ".md"
+var fileExt = ".txt"
 
 type Store struct {
 	Root      string
