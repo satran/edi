@@ -59,9 +59,7 @@ func (p *Parser) shell(stdin bool, content string) (ret string) {
 	} else {
 		ret = exec.Run(p.root, p.filename, content)
 	}
-	ret = strings.TrimSuffix(ret, "\n")
-	nested := New(p.root, p.filename)
-	return nested.Parse(ret)
+	return ret
 }
 
 func isImageLink(link string) bool {
