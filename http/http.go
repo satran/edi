@@ -1,8 +1,6 @@
 package http
 
 import (
-	"crypto/sha256"
-	"crypto/subtle"
 	"encoding/json"
 	"html/template"
 	"io"
@@ -186,31 +184,6 @@ func shellH(s *store.Store, tmpls *template.Template) http.HandlerFunc {
 			return
 		}
 	}
-}
-
-func basicAuth(next http.Handler, username string, password string) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		reqUsername, reqPassword, ok := r.BasicAuth()
-		if !ok {
-			w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		usernameHash := sha256.Sum256([]byte(reqUsername))
-		passwordHash := sha256.Sum256([]byte(reqPassword))
-		expectedUsernameHash := sha256.Sum256([]byte(username))
-		expectedPasswordHash := sha256.Sum256([]byte(password))
-
-		// ConstantTimeCompare is use to avoid leaking information using timing attacks
-		usernameMatch := (subtle.ConstantTimeCompare(usernameHash[:], expectedUsernameHash[:]) == 1)
-		passwordMatch := (subtle.ConstantTimeCompare(passwordHash[:], expectedPasswordHash[:]) == 1)
-		if usernameMatch && passwordMatch {
-			next.ServeHTTP(w, r)
-			return
-		}
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-	})
 }
 
 func shouldReject(w http.ResponseWriter, r *http.Request, method string) bool {

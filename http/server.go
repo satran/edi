@@ -11,11 +11,9 @@ import (
 )
 
 type options struct {
-	root     string
-	start    string
-	addr     string
-	username string
-	password string
+	root  string
+	start string
+	addr  string
 }
 
 type Opts func(o *options) *options
@@ -47,14 +45,6 @@ func WithServerAddr(addr string) Opts {
 	}
 }
 
-func WithBasicAuth(username string, password string) Opts {
-	return func(o *options) *options {
-		o.username = username
-		o.password = password
-		return o
-	}
-}
-
 //go:embed _s templates
 var contents embed.FS
 
@@ -77,11 +67,11 @@ func Server(opts ...Opts) (*http.Server, error) {
 	srv := &http.Server{Addr: o.addr}
 
 	http.Handle("/_s/", http.FileServer(http.FS(contents)))
-	http.Handle("/_edit/", logRequest(basicAuth(editH(s, tmpls, "/_edit/"), o.username, o.password)))
-	http.Handle("/_new", logRequest(basicAuth(newH(s, tmpls, "/_new"), o.username, o.password)))
-	http.Handle("/_add/", logRequest(basicAuth(addBlobH(s, "/_add/"), o.username, o.password)))
+	http.Handle("/_edit/", logRequest(editH(s, tmpls, "/_edit/")))
+	http.Handle("/_new", logRequest(newH(s, tmpls, "/_new")))
+	http.Handle("/_add/", logRequest(addBlobH(s, "/_add/")))
 	http.Handle("/_blob/", logRequest(getBlobH(s)))
-	http.Handle("/_sh/", logRequest(basicAuth(shellH(s, tmpls), o.username, o.password)))
+	http.Handle("/_sh/", logRequest(shellH(s, tmpls)))
 	http.Handle("/", logRequest(getH(s, tmpls)))
 
 	return srv, nil
