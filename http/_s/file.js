@@ -66,11 +66,11 @@ function hideParent(ev) {
     document.addEventListener('keydown', function(ev) {
 	switch (ev.key){
 	case "e":
-	    if (document.location.pathname.startsWith("/edit") ||
+	    if (document.location.pathname.startsWith("/_edit") ||
 		document.location.pathname.startsWith("/_sh")) {
 		break;
 	    }
-	    document.location = "/edit" + document.location.pathname;
+	    document.location = "/_edit" + document.location.pathname;
 	    break;
 	case "h":
 	    document.location = "/"
