@@ -72,6 +72,7 @@ func Server(opts ...Opts) (*http.Server, error) {
 	http.Handle("/_add/", logRequest(addBlobH(s, "/_add/")))
 	http.Handle("/_blob/", logRequest(getBlobH(s)))
 	http.Handle("/_sh/", logRequest(shellH(s, tmpls)))
+	http.Handle("/_ls/", logRequest(listH(s)))
 	http.Handle("/", logRequest(getH(s, tmpls)))
 
 	return srv, nil

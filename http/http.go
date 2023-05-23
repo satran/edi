@@ -47,6 +47,21 @@ func getH(s *store.Store, tmpls *template.Template) http.HandlerFunc {
 
 }
 
+func listH(s *store.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		files, err := s.List()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if err := json.NewEncoder(w).Encode(&files); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		return
+	}
+}
+
 const blobDir = "_blob"
 
 func getBlobH(s *store.Store) http.HandlerFunc {
