@@ -38,11 +38,6 @@ func (s *Store) List() ([]string, error) {
 }
 
 func (s *Store) Get(name string) (*File, error) {
-	ext := filepath.Ext(name)
-	if ext == "" {
-		// Assume all extension-less files are the txt files
-		name = name + fileExt
-	}
 	f, err := os.OpenFile(s.Path(name), os.O_RDONLY, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("open file %q: %w", name, err)
